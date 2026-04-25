@@ -1,139 +1,470 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Anthropic from '@anthropic-ai/sdk'
 
-const TOTAL_STEPS = 5
+// ─── CSS ──────────────────────────────────────────────────────────────────────
 
-function Spinner() {
-  return (
-    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-    </svg>
-  )
-}
+const BUILDER_CSS = `
+  .bld-root {
+    min-height:100vh;background:#0a0a0a;color:#fff;
+    font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+    font-feature-settings:"ss01","cv11";
+    overflow:hidden;position:relative;
+  }
+  .bld-bg-grid {
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(to right,rgba(255,255,255,0.022) 1px,transparent 1px),
+      linear-gradient(to bottom,rgba(255,255,255,0.022) 1px,transparent 1px);
+    background-size:96px 96px;
+    mask-image:radial-gradient(ellipse 1400px 900px at 50% 50%,#000 30%,transparent 85%);
+    -webkit-mask-image:radial-gradient(ellipse 1400px 900px at 50% 50%,#000 30%,transparent 85%);
+  }
+  .bld-bg-glow {
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(ellipse 900px 550px at 20% 115%,rgba(10,84,115,0.22),transparent 60%),
+      radial-gradient(ellipse 700px 400px at 100% -10%,rgba(245,166,35,0.12),transparent 60%);
+  }
+  .bld-viewport {
+    position:relative;z-index:1;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+  .bld-canvas {
+    width:1600px;height:900px;transform-origin:center center;
+    display:flex;flex-direction:column;position:relative;
+  }
 
-function AiButton({ onClick, loading, disabled, children, loadingLabel }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled || loading}
-      className="mt-4 flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-xl text-sm font-medium transition-all cursor-pointer disabled:cursor-default"
-    >
-      {loading ? <><Spinner />{loadingLabel}</> : children}
-    </button>
-  )
-}
+  /* ── Header ── */
+  .bld-head {
+    display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+    padding:28px 48px;border-bottom:1px solid rgba(255,255,255,0.08);
+    flex-shrink:0;position:relative;z-index:2;
+  }
+  .bld-brand {display:flex;align-items:center;gap:12px;font-weight:600;font-size:15px;letter-spacing:-0.01em}
+  .bld-brand-mark {width:20px;height:20px;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .bld-brand-mark::before {content:"";position:absolute;inset:0;border:1.5px solid #0E6E95;border-radius:50%;opacity:0.75}
+  .bld-brand-mark::after {content:"";width:7px;height:7px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px var(--accent)}
+  .bld-divider {width:1px;height:16px;background:rgba(255,255,255,0.14);margin:0 4px;flex-shrink:0}
+  .bld-crumb {color:rgba(255,255,255,0.62);font-weight:400;font-size:13px}
+
+  .bld-progress {
+    justify-self:center;display:flex;align-items:center;gap:20px;
+    padding:8px 18px;border:1px solid rgba(255,255,255,0.14);border-radius:999px;
+    background:rgba(255,255,255,0.02);
+  }
+  .bld-plabel {font-size:11px;color:rgba(255,255,255,0.62);text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em}
+  .bld-plabel b {color:#fff;font-weight:500}
+  .bld-dots {display:flex;align-items:center;gap:10px}
+  .bld-dot {width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.22);transition:all .3s;position:relative;flex-shrink:0}
+  .bld-dot.done {background:#0E6E95}
+  .bld-dot.active {
+    background:var(--accent);width:10px;height:10px;
+    box-shadow:0 0 0 4px var(--accent-soft),0 0 16px var(--accent-glow);
+  }
+  .bld-dot+.bld-dot::before {
+    content:"";position:absolute;right:100%;top:50%;transform:translateY(-50%);
+    width:14px;height:1px;background:rgba(255,255,255,0.14);margin-right:2px;
+  }
+  .bld-dot.done+.bld-dot::before,.bld-dot.active+.bld-dot::before {background:rgba(255,255,255,0.22)}
+
+  .bld-session {justify-self:end;display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,0.62)}
+  .bld-tag {
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 12px;border:1px solid rgba(255,255,255,0.14);border-radius:6px;
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.04em;
+  }
+  .bld-pulse {width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:bld-pulse 2s infinite;flex-shrink:0}
+  @keyframes bld-pulse {0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
+
+  /* ── Stage ── */
+  .bld-stage {
+    flex:1;min-height:0;overflow:hidden;
+    padding:56px 120px 24px;position:relative;z-index:1;
+  }
+  .bld-stage-inner {height:100%;display:flex;flex-direction:column}
+
+  .bld-kicker {
+    display:inline-flex;align-items:center;gap:10px;
+    padding:6px 12px;border:1px solid var(--accent-line);border-radius:999px;
+    background:var(--accent-soft);color:var(--accent);
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;
+    margin-bottom:24px;
+  }
+  .bld-kicker .d {width:5px;height:5px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent);flex-shrink:0}
+
+  .bld-q {font-size:46px;line-height:1.18;letter-spacing:-0.025em;font-weight:500;max-width:24ch;margin-bottom:18px;color:#fff}
+  .bld-q em {color:var(--accent);font-style:normal}
+  .bld-q-sm {font-size:36px}
+
+  .bld-help {font-size:17px;color:rgba(255,255,255,0.62);line-height:1.55;letter-spacing:-0.005em;max-width:64ch}
+  .bld-help b {color:#fff;font-weight:500}
+  .bld-help .ex {color:#fff;font-style:italic}
+
+  /* ── Field ── */
+  .bld-field {
+    margin-top:24px;
+    border:1px solid rgba(255,255,255,0.14);border-radius:14px;
+    background:linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0.008));
+    transition:border-color .2s,box-shadow .2s;display:flex;flex-direction:column;
+  }
+  .bld-field:focus-within {
+    border-color:var(--accent);
+    box-shadow:0 0 0 4px var(--accent-soft),0 0 60px -10px var(--accent-glow);
+  }
+  .bld-field-top {
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.08);
+    font-size:11px;color:rgba(255,255,255,0.40);
+  }
+  .bld-field-top-left {display:flex;align-items:center;gap:10px}
+  .bld-badge {
+    padding:3px 8px;border:1px solid rgba(255,255,255,0.14);border-radius:4px;
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.62);
+  }
+  .bld-field textarea,.bld-field-input {
+    width:100%;padding:18px 22px;
+    background:transparent;border:none;outline:none;resize:none;
+    color:#fff;font-family:inherit;font-size:22px;line-height:1.45;letter-spacing:-0.012em;
+  }
+  .bld-field textarea {min-height:110px}
+  .bld-field textarea::placeholder,.bld-field-input::placeholder {color:rgba(255,255,255,0.22);font-style:italic}
+  .bld-field-bot {
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 14px 10px 18px;border-top:1px solid rgba(255,255,255,0.08);
+    font-size:11px;color:rgba(255,255,255,0.40);
+  }
+  .bld-count {font-family:'JetBrains Mono',monospace}
+  .bld-count b {color:rgba(255,255,255,0.62);font-weight:500}
+
+  /* ── AI Button ── */
+  .bld-btn-ai {
+    display:inline-flex;align-items:center;gap:8px;
+    padding:9px 14px;border-radius:8px;
+    background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);
+    font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .2s;
+  }
+  .bld-btn-ai:hover:not(:disabled) {background:rgba(245,166,35,0.20);border-color:var(--accent)}
+  .bld-btn-ai:disabled {opacity:0.4;cursor:not-allowed}
+  .bld-btn-ai svg {width:13px;height:13px}
+  .bld-btn-ai .k {padding:2px 5px;border:1px solid currentColor;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:0.7;margin-left:2px}
+
+  /* ── AI Panel ── */
+  .bld-ai-panel {
+    margin-top:14px;border:1px dashed rgba(255,255,255,0.14);border-radius:12px;
+    padding:14px 18px;background:rgba(255,255,255,0.01);transition:all .3s;
+  }
+  .bld-ai-panel.ready {border:1px solid var(--accent-line);background:linear-gradient(180deg,var(--accent-soft),rgba(245,166,35,0.02))}
+  .bld-ai-head {display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .bld-ai-title {
+    display:flex;align-items:center;gap:10px;font-size:11px;color:rgba(255,255,255,0.40);
+    font-family:'JetBrains Mono',monospace;letter-spacing:0.10em;text-transform:uppercase;
+  }
+  .bld-ai-panel.ready .bld-ai-title {color:var(--accent)}
+  .bld-ai-ico {
+    width:18px;height:18px;border-radius:50%;background:#141414;
+    border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;
+    color:rgba(255,255,255,0.40);flex-shrink:0;
+  }
+  .bld-ai-panel.ready .bld-ai-ico {background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
+  .bld-ai-ico svg {width:10px;height:10px}
+  .bld-ai-body {color:rgba(255,255,255,0.22);font-size:15px;line-height:1.5;font-style:italic;min-height:28px}
+  .bld-ai-panel.ready .bld-ai-body {color:#fff;font-style:normal}
+  .bld-ai-actions {display:flex;align-items:center;gap:4px}
+  .bld-ai-accept {
+    display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;
+    background:var(--accent);color:#0a0a0a;border:none;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;
+  }
+  .bld-ai-accept svg {width:11px;height:11px}
+  .bld-ai-discard {background:none;border:none;color:rgba(255,255,255,0.40);cursor:pointer;font-family:inherit;font-size:12px;padding:6px 8px}
+  .bld-ai-discard:hover {color:rgba(255,255,255,0.62)}
+
+  /* ── KR List ── */
+  .bld-kr-list {display:flex;flex-direction:column;gap:14px;margin-top:24px}
+  .bld-kr-row {
+    display:flex;align-items:stretch;
+    border:1px solid rgba(255,255,255,0.14);border-radius:14px;
+    background:linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0.008));
+    overflow:hidden;transition:border-color .2s,box-shadow .2s;
+  }
+  .bld-kr-row:focus-within {border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .bld-kr-idx {
+    flex-shrink:0;width:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    border-right:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.40);
+  }
+  .bld-kr-idx .n {font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;color:#fff}
+  .bld-kr-idx .lbl {font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase}
+  .bld-kr-row.optional .bld-kr-idx .n {color:rgba(255,255,255,0.62)}
+  .bld-kr-input {
+    flex:1;padding:18px;font-size:18px;background:transparent;border:none;outline:none;
+    color:#fff;font-family:inherit;
+  }
+  .bld-kr-input::placeholder {color:rgba(255,255,255,0.22);font-style:italic}
+  .bld-opt-tag {
+    align-self:center;margin-right:14px;flex-shrink:0;
+    padding:3px 8px;border:1px solid rgba(255,255,255,0.14);border-radius:4px;
+    font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,0.40);
+    letter-spacing:0.1em;text-transform:uppercase;
+  }
+
+  /* ── Anchor Grid ── */
+  .bld-anchor-grid {display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:18px;margin-top:28px}
+  .bld-anchor-card {
+    border:1px solid rgba(255,255,255,0.14);border-radius:14px;
+    background:linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0.008));
+    display:flex;flex-direction:column;overflow:hidden;
+    transition:border-color .2s,box-shadow .2s;
+  }
+  .bld-anchor-card:focus-within {border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .bld-anchor-head {
+    display:flex;align-items:center;gap:10px;
+    padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.08);
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;
+    color:var(--accent);
+  }
+  .bld-anchor-ico {
+    width:22px;height:22px;border-radius:50%;flex-shrink:0;
+    background:var(--accent-soft);border:1px solid var(--accent-line);
+    display:flex;align-items:center;justify-content:center;color:var(--accent);
+  }
+  .bld-anchor-ico svg {width:11px;height:11px}
+  .bld-anchor-input {
+    padding:16px 18px;font-size:19px;background:transparent;border:none;outline:none;
+    color:#fff;font-family:inherit;
+  }
+  .bld-anchor-input::placeholder {color:rgba(255,255,255,0.22);font-style:italic}
+  .bld-anchor-hint {padding:0 18px 14px;font-size:11px;color:rgba(255,255,255,0.40);font-family:'JetBrains Mono',monospace;letter-spacing:0.04em}
+
+  /* ── Summary ── */
+  .bld-summary {display:grid;grid-template-columns:1.2fr 1fr;gap:24px;margin-top:16px;flex:1;min-height:0}
+  .bld-sum-obj {
+    border:1px solid var(--accent-line);border-radius:18px;padding:28px 32px;
+    background:linear-gradient(180deg,var(--accent-soft),rgba(245,166,35,0.03));
+    position:relative;overflow:hidden;display:flex;flex-direction:column;
+  }
+  .bld-sum-obj::before {
+    content:"";position:absolute;width:200px;height:200px;border-radius:50%;
+    right:-60px;top:-60px;background:var(--accent);opacity:0.15;filter:blur(40px);pointer-events:none;
+  }
+  .bld-sum-obj-lbl {font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:14px}
+  .bld-sum-obj-h2 {font-size:24px;font-weight:500;letter-spacing:-0.02em;line-height:1.3;color:#fff}
+  .bld-sum-obj-meta {
+    margin-top:auto;padding-top:16px;border-top:1px solid var(--accent-line);
+    display:flex;gap:20px;flex-wrap:wrap;
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,0.62);letter-spacing:0.06em;
+  }
+  .bld-sum-obj-meta b {color:#fff;font-weight:500;display:block;font-size:13px;margin-top:2px}
+
+  .bld-sum-list {display:flex;flex-direction:column;gap:10px;overflow:hidden}
+  .bld-sum-card {border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:14px 18px;background:rgba(255,255,255,0.02)}
+  .bld-sum-lbl {
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.40);
+    letter-spacing:0.14em;text-transform:uppercase;margin-bottom:6px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .bld-sum-lbl .d {width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex-shrink:0}
+  .bld-sum-txt {font-size:14px;color:#fff;line-height:1.45}
+  .bld-sum-anchor {border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:14px 18px;background:linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0))}
+  .bld-sum-anchor-row {display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px}
+  .bld-sum-anchor-k {font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.40);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:3px}
+  .bld-sum-anchor-v {font-size:13px;color:#fff;font-weight:500}
+
+  .bld-sum-actions {display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)}
+  .bld-sum-actions-left {display:flex;gap:10px}
+
+  /* ── Footer ── */
+  .bld-footer {
+    padding:18px 48px;border-top:1px solid rgba(255,255,255,0.08);
+    display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;
+    background:rgba(10,10,10,0.7);backdrop-filter:blur(10px);flex-shrink:0;position:relative;z-index:2;
+  }
+  .bld-nav-back {display:flex;align-items:center}
+  .bld-nav-next {justify-self:end;display:flex;align-items:center}
+  .bld-nav-center {
+    justify-self:center;font-size:11px;color:rgba(255,255,255,0.40);
+    font-family:'JetBrains Mono',monospace;letter-spacing:0.12em;
+    display:flex;align-items:center;gap:10px;
+  }
+  .bld-nav-center .sep {width:4px;height:4px;background:rgba(255,255,255,0.40);border-radius:50%;opacity:0.5}
+
+  .bld-btn {
+    display:inline-flex;align-items:center;gap:10px;
+    padding:13px 20px;border-radius:10px;
+    font-family:inherit;font-size:14px;font-weight:500;letter-spacing:-0.005em;
+    cursor:pointer;transition:all .2s;
+    border:1px solid rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.62);
+  }
+  .bld-btn:hover:not(:disabled) {color:#fff;border-color:rgba(255,255,255,0.22);background:rgba(255,255,255,0.03)}
+  .bld-btn:disabled {opacity:0.3;cursor:not-allowed}
+  .bld-btn svg {width:14px;height:14px}
+  .bld-btn.primary {background:var(--accent);color:#0a0a0a;border-color:var(--accent)}
+  .bld-btn.primary:hover:not(:disabled) {
+    background:var(--accent-2);border-color:var(--accent-2);
+    transform:translateX(2px);box-shadow:0 10px 40px -10px var(--accent-glow);
+  }
+  .bld-btn.primary:disabled {opacity:0.35;cursor:not-allowed;transform:none}
+
+  .bld-save-status {display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,0.40);font-family:'JetBrains Mono',monospace;letter-spacing:0.06em}
+  .bld-save-status .sd {width:6px;height:6px;border-radius:50%;background:#0E6E95;box-shadow:0 0 6px #0E6E95;flex-shrink:0}
+
+  @keyframes bld-spin {to{transform:rotate(360deg)}}
+  .bld-spinner {width:12px;height:12px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:bld-spin .7s linear infinite;flex-shrink:0}
+`
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const wordCount = t => (t.trim() ? t.trim().split(/\s+/).length : 0)
+
+const STEP_META = [
+  { label: 'FOKUS',        time: '~ 6 MIN',  next: 'Weiter zu Objective' },
+  { label: 'OBJECTIVE',    time: '~ 8 MIN',  next: 'Weiter zu Key Results' },
+  { label: 'KEY RESULTS',  time: '~ 12 MIN', next: 'Weiter zu Alltagsanker' },
+  { label: 'ALLTAGSANKER', time: '~ 5 MIN',  next: 'Zur Zusammenfassung' },
+  { label: 'REVIEW',       time: 'BEREIT',   next: null },
+]
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+const StarIco = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2z"/>
+  </svg>
+)
+const CheckIco = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 12l5 5L20 7"/>
+  </svg>
+)
+const ArrowRIco = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 12h14M12 5l7 7-7 7"/>
+  </svg>
+)
+const ArrowLIco = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 12H5M12 19l-7-7 7-7"/>
+  </svg>
+)
+const CopyIco = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </svg>
+)
+const ResetIco = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
+  </svg>
+)
+const MonitorIco = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/><circle cx="21" cy="6" r="2" fill="currentColor"/>
+  </svg>
+)
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function Builder() {
   const navigate = useNavigate()
+  const vpRef = useRef(null)
+
   const [step, setStep] = useState(1)
-
   const [focus, setFocus] = useState('')
-
   const [objective, setObjective] = useState('')
   const [aiObjective, setAiObjective] = useState('')
   const [aiObjectiveLoading, setAiObjectiveLoading] = useState(false)
   const [aiObjectiveError, setAiObjectiveError] = useState('')
-
   const [keyResults, setKeyResults] = useState(['', '', ''])
   const [aiKRFeedback, setAiKRFeedback] = useState('')
   const [aiKRLoading, setAiKRLoading] = useState(false)
   const [aiKRError, setAiKRError] = useState('')
-
   const [dailyAction, setDailyAction] = useState('')
   const [dailyPerson, setDailyPerson] = useState('')
   const [dailyDeadline, setDailyDeadline] = useState('')
-
   const [copied, setCopied] = useState(false)
 
-  const canProceed = () => {
-    switch (step) {
-      case 1: return focus.trim().length > 0
-      case 2: return objective.trim().length > 0
-      case 3: return keyResults[0].trim().length > 0 && keyResults[1].trim().length > 0
-      case 4: return dailyAction.trim() && dailyPerson.trim() && dailyDeadline.trim()
-      default: return true
+  // ── Viewport scaling ──────────────────────────────────────────────────────
+  useEffect(() => {
+    function scale() {
+      if (!vpRef.current) return
+      const s = Math.min(window.innerWidth / 1600, window.innerHeight / 900)
+      vpRef.current.style.transform = `scale(${s})`
     }
+    scale()
+    window.addEventListener('resize', scale)
+    return () => window.removeEventListener('resize', scale)
+  }, [])
+
+  // ── Keyboard navigation ───────────────────────────────────────────────────
+  useEffect(() => {
+    const onKey = e => {
+      if (e.target.matches('input,textarea')) return
+      if (e.key === 'ArrowRight' && step < 5) setStep(s => s + 1)
+      if (e.key === 'ArrowLeft'  && step > 1) setStep(s => s - 1)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [step])
+
+  // ── Logic ─────────────────────────────────────────────────────────────────
+  const canProceed = () => {
+    if (step === 1) return focus.trim().length > 0
+    if (step === 2) return objective.trim().length > 0
+    if (step === 3) return keyResults[0].trim().length > 0 && keyResults[1].trim().length > 0
+    if (step === 4) return dailyAction.trim() && dailyPerson.trim() && dailyDeadline.trim()
+    return true
   }
 
   const getClient = () =>
     new Anthropic({ apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY, dangerouslyAllowBrowser: true })
 
   const improveObjective = async () => {
-    setAiObjectiveLoading(true)
-    setAiObjectiveError('')
-    setAiObjective('')
+    if (aiObjective) { setAiObjective(''); setAiObjectiveError(''); return }
+    setAiObjectiveLoading(true); setAiObjectiveError(''); setAiObjective('')
     try {
       const msg = await getClient().messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 256,
-        messages: [{
-          role: 'user',
-          content: `Du bist OKR-Experte. Der Nutzer hat folgendes Objective formuliert: "${objective}". Verbessere es zu einem klaren, inspirierenden Objective das einen erreichbaren Zustand beschreibt, keine Aktivität. Gib nur das verbesserte Objective zurück, keine Erklärung.`,
-        }],
+        model: 'claude-sonnet-4-6', max_tokens: 256,
+        messages: [{ role: 'user', content: `Du bist OKR-Experte. Der Nutzer hat folgendes Objective formuliert: "${objective}". Verbessere es zu einem klaren, inspirierenden Objective das einen erreichbaren Zustand beschreibt, keine Aktivität. Gib nur das verbesserte Objective zurück, keine Erklärung.` }],
       })
       setAiObjective(msg.content[0].text.trim())
     } catch {
-      setAiObjectiveError('KI-Anfrage fehlgeschlagen. Prüfe deinen API-Key in der .env-Datei.')
+      setAiObjectiveError('KI-Anfrage fehlgeschlagen.')
     } finally {
       setAiObjectiveLoading(false)
     }
   }
 
   const checkKeyResults = async () => {
-    setAiKRLoading(true)
-    setAiKRError('')
-    setAiKRFeedback('')
+    setAiKRLoading(true); setAiKRError(''); setAiKRFeedback('')
     try {
-      const krList = keyResults
-        .map((kr, i) => kr.trim() ? `KR${i + 1}: ${kr}` : null)
-        .filter(Boolean)
-        .join('\n')
+      const krList = keyResults.map((kr, i) => kr.trim() ? `KR${i + 1}: ${kr}` : null).filter(Boolean).join('\n')
       const msg = await getClient().messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 512,
-        messages: [{
-          role: 'user',
-          content: `Du bist OKR-Experte. Prüfe diese Key Results:\n${krList}\n\nSind sie messbar und konkret? Gib für jeden KR entweder 'gut' oder einen konkreten Verbesserungsvorschlag zurück. Antworte als kurze Liste.`,
-        }],
+        model: 'claude-sonnet-4-6', max_tokens: 512,
+        messages: [{ role: 'user', content: `Du bist OKR-Experte. Prüfe diese Key Results:\n${krList}\n\nSind sie messbar und konkret? Gib für jeden KR entweder 'gut' oder einen konkreten Verbesserungsvorschlag zurück. Antworte als kurze Liste.` }],
       })
       setAiKRFeedback(msg.content[0].text.trim())
     } catch {
-      setAiKRError('KI-Anfrage fehlgeschlagen. Prüfe deinen API-Key in der .env-Datei.')
+      setAiKRError('KI-Anfrage fehlgeschlagen.')
     } finally {
       setAiKRLoading(false)
     }
   }
 
-  const updateKR = (index, value) =>
-    setKeyResults(prev => { const next = [...prev]; next[index] = value; return next })
+  const updateKR = (i, v) => setKeyResults(prev => { const n = [...prev]; n[i] = v; return n })
 
   const copyToClipboard = async () => {
     const lines = [
-      `OKR – ${new Date().toLocaleDateString('de-DE')}`,
-      '',
-      'OBJECTIVE',
-      objective,
-      '',
-      'KEY RESULTS',
-      ...keyResults.filter(kr => kr.trim()).map((kr, i) => `${i + 1}. ${kr}`),
-      '',
-      'ALLTAGSANKER',
-      `Aktion: ${dailyAction}`,
-      `Verantwortlich: ${dailyPerson}`,
-      `Bis: ${dailyDeadline}`,
+      `OKR – ${new Date().toLocaleDateString('de-DE')}`, '',
+      'OBJECTIVE', objective, '',
+      'KEY RESULTS', ...keyResults.filter(kr => kr.trim()).map((kr, i) => `${i + 1}. ${kr}`), '',
+      'ALLTAGSANKER', `Aktion: ${dailyAction}`, `Verantwortlich: ${dailyPerson}`, `Bis: ${dailyDeadline}`,
     ]
     await navigator.clipboard.writeText(lines.join('\n'))
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setCopied(true); setTimeout(() => setCopied(false), 2000)
   }
 
   const saveAndNavigate = () => {
     localStorage.setItem('lean-okr-current', JSON.stringify({
-      createdAt: new Date().toISOString(),
-      focus,
-      objective,
+      createdAt: new Date().toISOString(), focus, objective,
       keyResults: keyResults.filter(kr => kr.trim()),
       dailyAnchor: { action: dailyAction, person: dailyPerson, deadline: dailyDeadline },
     }))
@@ -146,326 +477,339 @@ export default function Builder() {
     setDailyAction(''); setDailyPerson(''); setDailyDeadline(''); setCopied(false)
   }
 
-  const inputClass = 'w-full bg-gray-900 border border-gray-700 focus:border-indigo-500 focus:outline-none rounded-xl px-4 py-3 text-white placeholder-gray-600 transition-colors'
+  // ── Computed ──────────────────────────────────────────────────────────────
+  const today = new Date()
+  const quarter = Math.floor(today.getMonth() / 3) + 1
+  const year = today.getFullYear()
+  const meta = STEP_META[step - 1]
 
+  const CSSVars = {
+    '--accent': '#F5A623', '--accent-2': '#FFB840',
+    '--accent-soft': 'rgba(245,166,35,0.12)', '--accent-line': 'rgba(245,166,35,0.30)',
+    '--accent-glow': 'rgba(245,166,35,0.45)',
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col">
+    <div className="bld-root" style={CSSVars}>
+      <style>{BUILDER_CSS}</style>
+      <div className="bld-bg-grid" />
+      <div className="bld-bg-glow" />
 
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 shrink-0">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors cursor-pointer"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          Startseite
-        </button>
-        <span className="text-white font-semibold text-sm">OKR-Builder</span>
-        <span className="text-gray-500 text-sm">Schritt {step} von {TOTAL_STEPS}</span>
-      </div>
+      <div className="bld-viewport">
+        <div ref={vpRef} className="bld-canvas">
 
-      {/* Progress bar */}
-      <div className="w-full h-0.5 bg-gray-800 shrink-0">
-        <div className="h-0.5 bg-indigo-500 transition-all duration-500" style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 overflow-y-auto">
-        <div className="max-w-2xl w-full">
-
-          {/* ── Step 1 ── */}
-          {step === 1 && (
-            <div>
-              <div className="text-xs font-semibold tracking-widest text-indigo-400 uppercase mb-4">
-                Schritt 1 – Fokus setzen
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-6 leading-snug">
-                Was soll sich in eurer Abteilung in den nächsten 3 Monaten wirklich verändern – wenn ihr nur eine Sache nennen dürftet?
-              </h2>
-              <textarea
-                value={focus}
-                onChange={e => setFocus(e.target.value)}
-                placeholder="Eure Antwort..."
-                rows={4}
-                className={`${inputClass} resize-none text-lg`}
-              />
-              <p className="mt-3 text-gray-500 text-sm leading-relaxed">
-                Denkt an Wirkung, nicht an Aktivitäten. Nicht "wir führen X ein", sondern "wir erreichen Y".
-              </p>
+          {/* ── Header ── */}
+          <header className="bld-head">
+            <div className="bld-brand">
+              <div className="bld-brand-mark" />
+              <span>Lean OKR</span>
+              <span className="bld-divider" />
+              <span className="bld-crumb">OKR-Builder</span>
             </div>
-          )}
-
-          {/* ── Step 2 ── */}
-          {step === 2 && (
-            <div>
-              <div className="text-xs font-semibold tracking-widest text-indigo-400 uppercase mb-4">
-                Schritt 2 – Objective formulieren
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-6 leading-snug">
-                Formuliert euer Ziel als inspirierenden Satz. Es soll motivieren, nicht verwalten.
-              </h2>
-              <textarea
-                value={objective}
-                onChange={e => setObjective(e.target.value)}
-                placeholder="Unser Objective..."
-                rows={4}
-                className={`${inputClass} resize-none text-lg`}
-              />
-              <p className="mt-3 text-gray-500 text-sm leading-relaxed">
-                Ein gutes Objective klingt ehrgeizig aber erreichbar. Beispiel: "Wir werden zur ersten Anlaufstelle für unsere Kunden bei Frage X."
-              </p>
-
-              <AiButton
-                onClick={improveObjective}
-                loading={aiObjectiveLoading}
-                disabled={!objective.trim()}
-                loadingLabel="KI arbeitet..."
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Mit KI verbessern
-              </AiButton>
-
-              {aiObjectiveError && <p className="mt-3 text-red-400 text-sm">{aiObjectiveError}</p>}
-
-              {aiObjective && (
-                <div className="mt-4 bg-indigo-950 border border-indigo-700 rounded-xl p-4">
-                  <div className="text-xs font-semibold tracking-widest text-indigo-400 uppercase mb-2">KI-Vorschlag</div>
-                  <p className="text-white text-base leading-relaxed mb-3">{aiObjective}</p>
-                  <button
-                    onClick={() => { setObjective(aiObjective); setAiObjective('') }}
-                    className="text-sm text-indigo-300 hover:text-white font-medium transition-colors cursor-pointer"
-                  >
-                    Vorschlag übernehmen →
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Step 3 ── */}
-          {step === 3 && (
-            <div>
-              <div className="text-xs font-semibold tracking-widest text-indigo-400 uppercase mb-4">
-                Schritt 3 – Key Results definieren
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-6 leading-snug">
-                Woran würdet ihr konkret merken, dass ihr das Ziel erreicht habt? Was könnt ihr messen oder beobachten?
-              </h2>
-              <div className="space-y-3">
-                {[0, 1, 2].map(i => (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className="text-indigo-400 font-semibold text-sm w-8 shrink-0">KR {i + 1}</span>
-                    <input
-                      type="text"
-                      value={keyResults[i]}
-                      onChange={e => updateKR(i, e.target.value)}
-                      placeholder={i === 2 ? 'Optionales drittes Key Result...' : `Key Result ${i + 1}...`}
-                      className={inputClass}
-                    />
-                  </div>
+            <div className="bld-progress">
+              <span className="bld-plabel"><b>{String(step).padStart(2,'0')}</b> / 05</span>
+              <div className="bld-dots">
+                {[1,2,3,4,5].map(i => (
+                  <div key={i} className={`bld-dot ${i < step ? 'done' : i === step ? 'active' : ''}`} />
                 ))}
               </div>
-              <p className="mt-4 text-gray-500 text-sm leading-relaxed">
-                Key Results sind Messgrössen, keine Aufgaben. Nicht "wir machen X", sondern "X steigt von A auf B".
-              </p>
-
-              <AiButton
-                onClick={checkKeyResults}
-                loading={aiKRLoading}
-                disabled={!keyResults[0].trim()}
-                loadingLabel="KI prüft..."
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Mit KI prüfen
-              </AiButton>
-
-              {aiKRError && <p className="mt-3 text-red-400 text-sm">{aiKRError}</p>}
-
-              {aiKRFeedback && (
-                <div className="mt-4 bg-gray-900 border border-gray-700 rounded-xl p-4">
-                  <div className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">KI-Feedback</div>
-                  <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{aiKRFeedback}</p>
-                </div>
-              )}
+              <span className="bld-plabel">{meta.label}</span>
             </div>
-          )}
-
-          {/* ── Step 4 ── */}
-          {step === 4 && (
-            <div>
-              <div className="text-xs font-semibold tracking-widest text-indigo-400 uppercase mb-4">
-                Schritt 4 – Alltagsanker
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-6 leading-snug">
-                Was bedeutet dieses OKR konkret für diese Woche?
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1.5">Konkrete Aktion</label>
-                  <input
-                    type="text"
-                    value={dailyAction}
-                    onChange={e => setDailyAction(e.target.value)}
-                    placeholder="Was wird diese Woche konkret getan?"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1.5">Verantwortliche Person</label>
-                  <input
-                    type="text"
-                    value={dailyPerson}
-                    onChange={e => setDailyPerson(e.target.value)}
-                    placeholder="Wer ist dafür verantwortlich?"
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1.5">Bis wann</label>
-                  <input
-                    type="text"
-                    value={dailyDeadline}
-                    onChange={e => setDailyDeadline(e.target.value)}
-                    placeholder="z.B. Freitag, 25. April"
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-              <p className="mt-4 text-gray-500 text-sm leading-relaxed">
-                Ohne diesen Schritt bleibt OKR abstrakt. Eine Aktion, eine Person, ein Datum.
-              </p>
+            <div className="bld-session">
+              <span className="bld-tag"><span className="bld-pulse" />LIVE · PROJEKTION</span>
+              <span className="bld-tag" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>Q{quarter} · {year}</span>
             </div>
-          )}
+          </header>
 
-          {/* ── Step 5 – Summary ── */}
-          {step === 5 && (
-            <div>
-              <div className="text-xs font-semibold tracking-widest text-indigo-400 uppercase mb-4">
-                Schritt 5 – Zusammenfassung
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-8 leading-snug">
-                Euer OKR auf einen Blick
-              </h2>
+          {/* ── Stage ── */}
+          <div className="bld-stage">
+            <div className="bld-stage-inner">
 
-              <div className="space-y-4 mb-8">
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                  <div className="text-xs font-semibold tracking-widest text-indigo-400 uppercase mb-2">Objective</div>
-                  <p className="text-white text-base leading-relaxed">{objective}</p>
+              {/* ── Step 1: Fokus ── */}
+              {step === 1 && <>
+                <span className="bld-kicker"><span className="d" />Frage 01 · Fokus setzen</span>
+                <h1 className="bld-q">
+                  Was soll sich in eurer Abteilung in den nächsten 3 Monaten <em>wirklich verändern</em> — wenn ihr nur eine Sache nennen dürftet?
+                </h1>
+                <p className="bld-help">Denkt an <b>Wirkung</b>, nicht an Aktivitäten. Die eine Sache, die am Ende des Quartals einen spürbaren Unterschied macht.</p>
+                <div className="bld-field">
+                  <div className="bld-field-top">
+                    <div className="bld-field-top-left">
+                      <span className="bld-badge">FOKUS</span>
+                      <span>Eine Sache · Wirkung statt Aktivität</span>
+                    </div>
+                    <span>Auto-gespeichert</span>
+                  </div>
+                  <textarea
+                    value={focus}
+                    onChange={e => setFocus(e.target.value)}
+                    placeholder="Schreibt hier rein, was sich wirklich ändern soll …"
+                  />
+                  <div className="bld-field-bot">
+                    <span className="bld-count"><b>{wordCount(focus)}</b> Wörter · <b>{focus.length}</b>/240</span>
+                    <span>SCHRITT 01 · KEIN ZIELSATZ NÖTIG</span>
+                  </div>
+                </div>
+              </>}
+
+              {/* ── Step 2: Objective ── */}
+              {step === 2 && <>
+                <span className="bld-kicker"><span className="d" />Frage 02 · Objective</span>
+                <h1 className="bld-q">
+                  Formuliert euer Ziel als <em>inspirierenden Satz.</em> Es soll motivieren, nicht verwalten.
+                </h1>
+                <p className="bld-help">
+                  Ein gutes Objective beschreibt einen <b>Zustand</b>, keine Aktivität.
+                  Beispiel: <span className="ex">„Wir werden zur ersten Anlaufstelle für unsere Kunden."</span>
+                </p>
+                <div className="bld-field">
+                  <div className="bld-field-top">
+                    <div className="bld-field-top-left">
+                      <span className="bld-badge">OBJECTIVE</span>
+                      <span>Ein Satz · Präsens · Zustand, keine Aktivität</span>
+                    </div>
+                    <button
+                      className="bld-btn-ai"
+                      onClick={improveObjective}
+                      disabled={!objective.trim() || aiObjectiveLoading}
+                    >
+                      {aiObjectiveLoading
+                        ? <><span className="bld-spinner" />KI arbeitet…</>
+                        : <><StarIco />Mit KI verbessern<span className="k">⌘ K</span></>
+                      }
+                    </button>
+                  </div>
+                  <textarea
+                    value={objective}
+                    onChange={e => setObjective(e.target.value)}
+                    placeholder="Tippt euer Objective hier ein …"
+                  />
+                  <div className="bld-field-bot">
+                    <span className="bld-count"><b>{wordCount(objective)}</b> Wörter · <b>{objective.length}</b>/160</span>
+                    <span>AUTO-GESPEICHERT</span>
+                  </div>
                 </div>
 
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                  <div className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-3">Key Results</div>
-                  <div className="space-y-2.5">
+                <div className={`bld-ai-panel ${aiObjective ? 'ready' : ''}`}>
+                  <div className="bld-ai-head">
+                    <div className="bld-ai-title">
+                      <span className="bld-ai-ico"><StarIco /></span>
+                      {aiObjective ? 'KI-Vorschlag · inspirierender formuliert' : 'KI-Vorschlag erscheint hier'}
+                    </div>
+                    {aiObjective && (
+                      <div className="bld-ai-actions">
+                        <button className="bld-ai-discard" onClick={() => setAiObjective('')}>Verwerfen</button>
+                        <button className="bld-ai-accept" onClick={() => { setObjective(aiObjective); setAiObjective('') }}>
+                          Vorschlag übernehmen <CheckIco />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bld-ai-body">
+                    {aiObjective || 'Klicke „Mit KI verbessern", um einen alternativen, inspirierender formulierten Vorschlag zu erhalten.'}
+                  </div>
+                  {aiObjectiveError && <p style={{ color: '#E85D75', fontSize: 12, marginTop: 6 }}>{aiObjectiveError}</p>}
+                </div>
+              </>}
+
+              {/* ── Step 3: Key Results ── */}
+              {step === 3 && <>
+                <span className="bld-kicker"><span className="d" />Frage 03 · Key Results</span>
+                <h1 className="bld-q">
+                  Woran würdet ihr <em>konkret merken</em>, dass ihr das Ziel erreicht habt?
+                </h1>
+                <p className="bld-help">Key Results sind <b>Messgrößen</b>, keine Aufgaben. Jedes KR beschreibt ein Ergebnis mit Zahl &amp; Endzustand.</p>
+
+                <div className="bld-kr-list">
+                  {[0, 1, 2].map(i => (
+                    <div key={i} className={`bld-kr-row${i === 2 ? ' optional' : ''}`}>
+                      <div className="bld-kr-idx">
+                        <span className="n">{String(i + 1).padStart(2,'0')}</span>
+                        <span className="lbl">KR</span>
+                      </div>
+                      <input
+                        className="bld-kr-input"
+                        type="text"
+                        value={keyResults[i]}
+                        onChange={e => updateKR(i, e.target.value)}
+                        placeholder={i === 2 ? 'optional · drittes Key Result' : `z. B. Kundenzufriedenheit steigt von 72% auf 85%`}
+                      />
+                      {i === 2 && <span className="bld-opt-tag">Optional</span>}
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ marginTop: 18, display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                  <button
+                    className="bld-btn-ai"
+                    onClick={checkKeyResults}
+                    disabled={!keyResults[0].trim() || aiKRLoading}
+                  >
+                    {aiKRLoading
+                      ? <><span className="bld-spinner" />KI prüft…</>
+                      : <><CheckIco />Mit KI prüfen<span className="k">⌘ K</span></>
+                    }
+                  </button>
+                </div>
+
+                {(aiKRFeedback || aiKRError) && (
+                  <div className={`bld-ai-panel${aiKRFeedback ? ' ready' : ''}`} style={{ marginTop: 12 }}>
+                    <div className="bld-ai-head">
+                      <div className="bld-ai-title">
+                        <span className="bld-ai-ico"><CheckIco /></span>
+                        {aiKRFeedback ? 'KI-Feedback zu euren Key Results' : 'Fehler'}
+                      </div>
+                      {aiKRFeedback && (
+                        <button className="bld-ai-discard" onClick={() => setAiKRFeedback('')}>Schließen</button>
+                      )}
+                    </div>
+                    <div className="bld-ai-body" style={{ whiteSpace: 'pre-wrap', fontStyle: 'normal', color: aiKRError ? '#E85D75' : undefined }}>
+                      {aiKRFeedback || aiKRError}
+                    </div>
+                  </div>
+                )}
+              </>}
+
+              {/* ── Step 4: Alltagsanker ── */}
+              {step === 4 && <>
+                <span className="bld-kicker"><span className="d" />Frage 04 · Alltagsanker</span>
+                <h1 className="bld-q">
+                  Was bedeutet dieses OKR <em>konkret für diese Woche</em>?
+                </h1>
+                <p className="bld-help"><b>Ohne diesen Schritt bleibt OKR abstrakt.</b> Verankert das Ziel in einer ersten, sichtbaren Handlung — Person, Aktion, Datum.</p>
+
+                <div className="bld-anchor-grid">
+                  <div className="bld-anchor-card">
+                    <div className="bld-anchor-head">
+                      <span className="bld-anchor-ico">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                      </span>
+                      Konkrete Aktion
+                    </div>
+                    <input className="bld-anchor-input" type="text" value={dailyAction}
+                      onChange={e => setDailyAction(e.target.value)}
+                      placeholder="z. B. Kunden-Erstkontakt-Audit starten" />
+                    <div className="bld-anchor-hint">Was wird tatsächlich gemacht — kein „klären", kein „besprechen".</div>
+                  </div>
+                  <div className="bld-anchor-card">
+                    <div className="bld-anchor-head">
+                      <span className="bld-anchor-ico">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+                      </span>
+                      Verantwortliche Person
+                    </div>
+                    <input className="bld-anchor-input" type="text" value={dailyPerson}
+                      onChange={e => setDailyPerson(e.target.value)}
+                      placeholder="Name" />
+                    <div className="bld-anchor-hint">Genau eine Person — keine Teams, keine Abteilungen.</div>
+                  </div>
+                  <div className="bld-anchor-card">
+                    <div className="bld-anchor-head">
+                      <span className="bld-anchor-ico">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                      </span>
+                      Bis wann
+                    </div>
+                    <input className="bld-anchor-input" type="text" value={dailyDeadline}
+                      onChange={e => setDailyDeadline(e.target.value)}
+                      placeholder="TT.MM.JJJJ" />
+                    <div className="bld-anchor-hint">Ein konkretes Datum, nicht „nächste Woche".</div>
+                  </div>
+                </div>
+              </>}
+
+              {/* ── Step 5: Zusammenfassung ── */}
+              {step === 5 && <>
+                <span className="bld-kicker"><span className="d" />Schritt 05 · Zusammenfassung</span>
+                <h1 className="bld-q bld-q-sm">
+                  Euer OKR für <em>Q{quarter} {year}.</em><br />Bereit, sichtbar zu werden.
+                </h1>
+
+                <div className="bld-summary">
+                  <div className="bld-sum-obj">
+                    <div className="bld-sum-obj-lbl">Objective</div>
+                    <h2 className="bld-sum-obj-h2">{objective || '–'}</h2>
+                    <div className="bld-sum-obj-meta">
+                      <span>ZYKLUS<b>Q{quarter} {year}</b></span>
+                      {dailyPerson && <span>OWNER<b>{dailyPerson}</b></span>}
+                    </div>
+                  </div>
+
+                  <div className="bld-sum-list">
                     {keyResults.filter(kr => kr.trim()).map((kr, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <span className="text-indigo-400 font-semibold text-sm shrink-0 mt-0.5">KR {i + 1}</span>
-                        <p className="text-gray-300 text-sm leading-relaxed">{kr}</p>
+                      <div key={i} className="bld-sum-card">
+                        <div className="bld-sum-lbl"><span className="d" />Key Result {String(i + 1).padStart(2,'0')}</div>
+                        <div className="bld-sum-txt">{kr}</div>
                       </div>
                     ))}
+                    {(dailyAction || dailyPerson || dailyDeadline) && (
+                      <div className="bld-sum-anchor">
+                        <div className="bld-sum-lbl"><span className="d" />Alltagsanker · Diese Woche</div>
+                        <div className="bld-sum-anchor-row">
+                          <div><div className="bld-sum-anchor-k">Aktion</div><div className="bld-sum-anchor-v">{dailyAction || '–'}</div></div>
+                          <div><div className="bld-sum-anchor-k">Owner</div><div className="bld-sum-anchor-v">{dailyPerson || '–'}</div></div>
+                          <div><div className="bld-sum-anchor-k">Bis</div><div className="bld-sum-anchor-v">{dailyDeadline || '–'}</div></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                  <div className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-3">Alltagsanker</div>
-                  <div className="space-y-1.5">
-                    <p className="text-sm"><span className="text-gray-500">Aktion:</span> <span className="text-gray-300">{dailyAction}</span></p>
-                    <p className="text-sm"><span className="text-gray-500">Verantwortlich:</span> <span className="text-gray-300">{dailyPerson}</span></p>
-                    <p className="text-sm"><span className="text-gray-500">Bis:</span> <span className="text-gray-300">{dailyDeadline}</span></p>
+                <div className="bld-sum-actions">
+                  <div className="bld-sum-actions-left">
+                    <button className="bld-btn" onClick={copyToClipboard}>
+                      {copied ? <><CheckIco />Kopiert!</> : <><CopyIco />Als Text kopieren</>}
+                    </button>
+                    <button className="bld-btn" onClick={reset}>
+                      <ResetIco />Neu starten
+                    </button>
                   </div>
+                  <button className="bld-btn primary" onClick={saveAndNavigate} style={{ padding: '15px 22px', fontSize: 15 }}>
+                    <MonitorIco />
+                    Zum Zielemonitor
+                    <ArrowRIco />
+                  </button>
                 </div>
-              </div>
+              </>}
 
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={copyToClipboard}
-                  className="flex items-center justify-center gap-2 px-5 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-xl text-sm font-medium transition-all cursor-pointer"
-                >
-                  {copied ? (
-                    <>
-                      <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      Kopiert!
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                      Als Text kopieren
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={saveAndNavigate}
-                  className="flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-medium transition-all cursor-pointer"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  Zum Zielemonitor
-                </button>
-
-                <button
-                  onClick={reset}
-                  className="flex items-center justify-center gap-2 px-5 py-3 border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white rounded-xl text-sm font-medium transition-all cursor-pointer"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Neu starten
-                </button>
-              </div>
             </div>
-          )}
+          </div>
+
+          {/* ── Footer ── */}
+          <footer className="bld-footer">
+            <div className="bld-nav-back">
+              {step === 1 ? (
+                <span className="bld-save-status"><span className="sd" />GESPEICHERT · LOKAL</span>
+              ) : (
+                <button className="bld-btn" onClick={() => setStep(s => s - 1)}>
+                  <ArrowLIco />Zurück
+                </button>
+              )}
+            </div>
+
+            <div className="bld-nav-center">
+              <span>{String(step).padStart(2,'0')} / 05</span>
+              <span className="sep" />
+              <span>{meta.label}</span>
+              <span className="sep" />
+              <span>{meta.time}</span>
+            </div>
+
+            <div className="bld-nav-next">
+              {step < 5 ? (
+                <button className="bld-btn primary" onClick={() => setStep(s => s + 1)} disabled={!canProceed()}>
+                  {meta.next}
+                  <ArrowRIco />
+                </button>
+              ) : (
+                <span className="bld-save-status"><span className="sd" />ALLES GESPEICHERT</span>
+              )}
+            </div>
+          </footer>
 
         </div>
       </div>
-
-      {/* Navigation footer */}
-      {step < 5 && (
-        <div className="border-t border-gray-800 px-6 py-4 flex items-center justify-between shrink-0">
-          <button
-            onClick={() => setStep(s => s - 1)}
-            disabled={step === 1}
-            className="flex items-center gap-2 px-5 py-2.5 text-gray-400 hover:text-white disabled:text-gray-700 text-sm font-medium transition-colors cursor-pointer disabled:cursor-default"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            Zurück
-          </button>
-
-          <div className="flex items-center gap-1.5">
-            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i + 1 === step ? 'w-6 bg-indigo-500' : i + 1 < step ? 'w-1.5 bg-indigo-700' : 'w-1.5 bg-gray-700'
-                }`}
-              />
-            ))}
-          </div>
-
-          <button
-            onClick={() => setStep(s => s + 1)}
-            disabled={!canProceed()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-xl text-sm font-medium transition-all cursor-pointer disabled:cursor-default"
-          >
-            Weiter
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      )}
     </div>
   )
 }
