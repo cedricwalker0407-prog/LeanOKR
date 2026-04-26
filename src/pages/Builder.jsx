@@ -41,12 +41,14 @@ const BUILDER_CSS = `
     padding:28px 48px;border-bottom:1px solid rgba(255,255,255,0.08);
     flex-shrink:0;position:relative;z-index:2;
   }
-  .bld-brand {display:flex;align-items:center;gap:12px;font-weight:600;font-size:15px;letter-spacing:-0.01em}
+  .bld-brand {display:flex;align-items:center;gap:14px;font-weight:600;font-size:15px;letter-spacing:-0.01em}
   .bld-brand-mark {width:20px;height:20px;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .bld-brand-mark::before {content:"";position:absolute;inset:0;border:1.5px solid #0E6E95;border-radius:50%;opacity:0.75}
   .bld-brand-mark::after {content:"";width:7px;height:7px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px var(--accent)}
-  .bld-divider {width:1px;height:16px;background:rgba(255,255,255,0.14);margin:0 4px;flex-shrink:0}
-  .bld-crumb {color:rgba(255,255,255,0.62);font-weight:400;font-size:13px}
+  .bld-brand-logo {height:34px;width:auto;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));flex-shrink:0}
+  .bld-brand-product {display:flex;flex-direction:column;line-height:1;gap:3px;padding-left:14px;border-left:1px solid rgba(255,255,255,0.14);}
+  .bld-brand-name {font-weight:600;font-size:13.5px;letter-spacing:-0.005em;color:#fff}
+  .bld-brand-crumb {color:rgba(255,255,255,0.62);font-weight:400;font-size:11px;font-family:'JetBrains Mono',monospace;letter-spacing:0.06em}
 
   .bld-progress {
     justify-self:center;display:flex;align-items:center;gap:20px;
@@ -368,6 +370,7 @@ const DEFAULT_BUILDER_SETTINGS = {
   accentColor: '#F5A623',
   fontColor: '#FFFFFF',
   companyName: '',
+  logoDataUrl: '',
 }
 
 function deriveAccent(hex) {
@@ -457,6 +460,7 @@ const GearIco = () => (
 export default function Builder() {
   const navigate = useNavigate()
   const vpRef = useRef(null)
+  const logoInputRef = useRef(null)
 
   const [step, setStep] = useState(1)
   const [focus, setFocus] = useState('')
@@ -605,6 +609,14 @@ export default function Builder() {
     localStorage.setItem('lean-okr-builder-settings', JSON.stringify(DEFAULT_BUILDER_SETTINGS))
   }
 
+  const handleLogoUpload = e => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => updateBldSettings({ logoDataUrl: ev.target.result })
+    reader.readAsDataURL(file)
+  }
+
   // ── Computed ──────────────────────────────────────────────────────────────
   const today = new Date()
   const quarter = Math.floor(today.getMonth() / 3) + 1
@@ -634,17 +646,19 @@ export default function Builder() {
           {/* ── Header ── */}
           <header className="bld-head">
             <div className="bld-brand">
-              <div className="bld-brand-mark" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <span>Lean OKR</span>
-                {bldSettings.companyName && (
-                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)', fontWeight: 400, letterSpacing: '0.04em' }}>
-                    {bldSettings.companyName}
-                  </span>
-                )}
+              {bldSettings.logoDataUrl
+                ? <img src={bldSettings.logoDataUrl} alt="Logo" className="bld-brand-logo" />
+                : <div className="bld-brand-mark" />
+              }
+              <div className="bld-brand-product">
+                <span className="bld-brand-name">
+                  {!bldSettings.logoDataUrl && bldSettings.companyName
+                    ? bldSettings.companyName
+                    : 'Lean OKR'
+                  }
+                </span>
+                <span className="bld-brand-crumb">OKR-Builder</span>
               </div>
-              <span className="bld-divider" />
-              <span className="bld-crumb">OKR-Builder</span>
             </div>
             <div className="bld-progress">
               <span className="bld-plabel"><b>{String(step).padStart(2,'0')}</b> / 05</span>
@@ -958,12 +972,41 @@ export default function Builder() {
                     Einstellungen
                   </div>
 
-                  {/* Unternehmensname */}
+                  {/* Unternehmen */}
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
                     Unternehmen
                   </div>
+
+                  {/* Logo */}
+                  <div style={{ marginBottom: 10 }}>
+                    <label style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,.5)', marginBottom: 5 }}>Logo (PNG / SVG / JPG)</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {bldSettings.logoDataUrl && (
+                        <img src={bldSettings.logoDataUrl} alt="Logo"
+                          style={{ height: 28, width: 'auto', objectFit: 'contain', borderRadius: 4, background: 'rgba(255,255,255,.06)', padding: '2px 6px', flexShrink: 0 }} />
+                      )}
+                      <button onClick={() => logoInputRef.current?.click()} style={{
+                        flex: 1, padding: '6px 10px', fontSize: 12,
+                        background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.14)',
+                        borderRadius: 6, color: 'rgba(255,255,255,.6)', cursor: 'pointer',
+                      }}>
+                        {bldSettings.logoDataUrl ? 'Ändern' : 'Hochladen'}
+                      </button>
+                      {bldSettings.logoDataUrl && (
+                        <button onClick={() => updateBldSettings({ logoDataUrl: '' })} style={{
+                          padding: '6px 9px', fontSize: 12,
+                          background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.14)',
+                          borderRadius: 6, color: 'rgba(255,255,255,.38)', cursor: 'pointer',
+                        }}>✕</button>
+                      )}
+                      <input ref={logoInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml"
+                        onChange={handleLogoUpload} style={{ display: 'none' }} />
+                    </div>
+                  </div>
+
+                  {/* Name (Fallback wenn kein Logo) */}
                   <div style={{ marginBottom: 14 }}>
-                    <label style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,.5)', marginBottom: 5 }}>Name</label>
+                    <label style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,.5)', marginBottom: 5 }}>Name (ohne Logo)</label>
                     <input
                       type="text"
                       value={bldSettings.companyName}
