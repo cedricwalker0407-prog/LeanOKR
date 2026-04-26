@@ -6,7 +6,7 @@ import Anthropic from '@anthropic-ai/sdk'
 
 const BUILDER_CSS = `
   .bld-root {
-    min-height:100vh;background:var(--bg,#0a0a0a);color:#fff;
+    min-height:100vh;background:var(--color-background,#0a0a0a);color:#fff;
     font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
     font-feature-settings:"ss01","cv11";
     overflow:hidden;position:relative;
@@ -43,8 +43,8 @@ const BUILDER_CSS = `
   }
   .bld-brand {display:flex;align-items:center;gap:14px;font-weight:600;font-size:15px;letter-spacing:-0.01em}
   .bld-brand-mark {width:20px;height:20px;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .bld-brand-mark::before {content:"";position:absolute;inset:0;border:1.5px solid var(--secondary,#0E6E95);border-radius:50%;opacity:0.75}
-  .bld-brand-mark::after {content:"";width:7px;height:7px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px var(--accent)}
+  .bld-brand-mark::before {content:"";position:absolute;inset:0;border:1.5px solid var(--color-secondary,#0E6E95);border-radius:50%;opacity:0.75}
+  .bld-brand-mark::after {content:"";width:7px;height:7px;background:var(--color-accent);border-radius:50%;box-shadow:0 0 12px var(--color-accent)}
   .bld-brand-logo {height:34px;width:auto;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));flex-shrink:0}
   .bld-brand-product {display:flex;flex-direction:column;line-height:1;gap:3px;padding-left:14px;border-left:1px solid rgba(255,255,255,0.14);}
   .bld-brand-name {font-weight:600;font-size:13.5px;letter-spacing:-0.005em;color:#fff}
@@ -59,9 +59,9 @@ const BUILDER_CSS = `
   .bld-plabel b {color:#fff;font-weight:500}
   .bld-dots {display:flex;align-items:center;gap:10px}
   .bld-dot {width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.22);transition:all .3s;position:relative;flex-shrink:0}
-  .bld-dot.done {background:var(--secondary,#0E6E95)}
+  .bld-dot.done {background:var(--color-secondary,#0E6E95)}
   .bld-dot.active {
-    background:var(--accent);width:10px;height:10px;
+    background:var(--color-accent);width:10px;height:10px;
     box-shadow:0 0 0 4px var(--accent-soft),0 0 16px var(--accent-glow);
   }
   .bld-dot+.bld-dot::before {
@@ -76,7 +76,7 @@ const BUILDER_CSS = `
     padding:6px 12px;border:1px solid rgba(255,255,255,0.14);border-radius:6px;
     font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.04em;
   }
-  .bld-pulse {width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:bld-pulse 2s infinite;flex-shrink:0}
+  .bld-pulse {width:6px;height:6px;border-radius:50%;background:var(--color-accent);box-shadow:0 0 10px var(--color-accent);animation:bld-pulse 2s infinite;flex-shrink:0}
   @keyframes bld-pulse {0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
 
   /* ── Stage ── */
@@ -89,14 +89,14 @@ const BUILDER_CSS = `
   .bld-kicker {
     display:inline-flex;align-items:center;gap:10px;
     padding:6px 12px;border:1px solid var(--accent-line);border-radius:999px;
-    background:var(--accent-soft);color:var(--accent);
+    background:var(--accent-soft);color:var(--color-accent);
     font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;
     margin-bottom:24px;
   }
-  .bld-kicker .d {width:5px;height:5px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent);flex-shrink:0}
+  .bld-kicker .d {width:5px;height:5px;background:var(--color-accent);border-radius:50%;box-shadow:0 0 8px var(--color-accent);flex-shrink:0}
 
   .bld-q {font-size:46px;line-height:1.18;letter-spacing:-0.025em;font-weight:500;max-width:24ch;margin-bottom:18px;color:var(--font-color,#fff)}
-  .bld-q em {color:var(--accent);font-style:normal}
+  .bld-q em {color:var(--color-accent);font-style:normal}
   .bld-q-sm {font-size:36px}
 
   .bld-help {font-size:17px;color:rgba(255,255,255,0.62);line-height:1.55;letter-spacing:-0.005em;max-width:64ch}
@@ -111,7 +111,7 @@ const BUILDER_CSS = `
     transition:border-color .2s,box-shadow .2s;display:flex;flex-direction:column;
   }
   .bld-field:focus-within {
-    border-color:var(--accent);
+    border-color:var(--color-accent);
     box-shadow:0 0 0 4px var(--accent-soft),0 0 60px -10px var(--accent-glow);
   }
   .bld-field-top {
@@ -143,10 +143,10 @@ const BUILDER_CSS = `
   .bld-btn-ai {
     display:inline-flex;align-items:center;gap:8px;
     padding:9px 14px;border-radius:8px;
-    background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);
+    background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--color-accent);
     font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .2s;
   }
-  .bld-btn-ai:hover:not(:disabled) {background:rgba(245,166,35,0.20);border-color:var(--accent)}
+  .bld-btn-ai:hover:not(:disabled) {background:var(--accent-soft);border-color:var(--color-accent)}
   .bld-btn-ai:disabled {opacity:0.4;cursor:not-allowed}
   .bld-btn-ai svg {width:13px;height:13px}
   .bld-btn-ai .k {padding:2px 5px;border:1px solid currentColor;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:9.5px;opacity:0.7;margin-left:2px}
@@ -162,20 +162,20 @@ const BUILDER_CSS = `
     display:flex;align-items:center;gap:10px;font-size:11px;color:rgba(255,255,255,0.40);
     font-family:'JetBrains Mono',monospace;letter-spacing:0.10em;text-transform:uppercase;
   }
-  .bld-ai-panel.ready .bld-ai-title {color:var(--accent)}
+  .bld-ai-panel.ready .bld-ai-title {color:var(--color-accent)}
   .bld-ai-ico {
     width:18px;height:18px;border-radius:50%;background:#141414;
     border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;
     color:rgba(255,255,255,0.40);flex-shrink:0;
   }
-  .bld-ai-panel.ready .bld-ai-ico {background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
+  .bld-ai-panel.ready .bld-ai-ico {background:var(--accent-soft);border-color:var(--accent-line);color:var(--color-accent)}
   .bld-ai-ico svg {width:10px;height:10px}
   .bld-ai-body {color:rgba(255,255,255,0.22);font-size:15px;line-height:1.5;font-style:italic;min-height:28px}
   .bld-ai-panel.ready .bld-ai-body {color:#fff;font-style:normal}
   .bld-ai-actions {display:flex;align-items:center;gap:4px}
   .bld-ai-accept {
     display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;
-    background:var(--accent);color:#0a0a0a;border:none;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;
+    background:var(--color-accent);color:#0a0a0a;border:none;font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;
   }
   .bld-ai-accept svg {width:11px;height:11px}
   .bld-ai-discard {background:none;border:none;color:rgba(255,255,255,0.40);cursor:pointer;font-family:inherit;font-size:12px;padding:6px 8px}
@@ -189,7 +189,7 @@ const BUILDER_CSS = `
     background:linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0.008));
     overflow:hidden;transition:border-color .2s,box-shadow .2s;
   }
-  .bld-kr-row:focus-within {border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .bld-kr-row:focus-within {border-color:var(--color-accent);box-shadow:0 0 0 4px var(--accent-soft)}
   .bld-kr-idx {
     flex-shrink:0;width:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
     border-right:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.40);
@@ -217,17 +217,17 @@ const BUILDER_CSS = `
     display:flex;flex-direction:column;overflow:hidden;
     transition:border-color .2s,box-shadow .2s;
   }
-  .bld-anchor-card:focus-within {border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .bld-anchor-card:focus-within {border-color:var(--color-accent);box-shadow:0 0 0 4px var(--accent-soft)}
   .bld-anchor-head {
     display:flex;align-items:center;gap:10px;
     padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.08);
     font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;
-    color:var(--accent);
+    color:var(--color-accent);
   }
   .bld-anchor-ico {
     width:22px;height:22px;border-radius:50%;flex-shrink:0;
     background:var(--accent-soft);border:1px solid var(--accent-line);
-    display:flex;align-items:center;justify-content:center;color:var(--accent);
+    display:flex;align-items:center;justify-content:center;color:var(--color-accent);
   }
   .bld-anchor-ico svg {width:11px;height:11px}
   .bld-anchor-input {
@@ -246,9 +246,9 @@ const BUILDER_CSS = `
   }
   .bld-sum-obj::before {
     content:"";position:absolute;width:200px;height:200px;border-radius:50%;
-    right:-60px;top:-60px;background:var(--accent);opacity:0.15;filter:blur(40px);pointer-events:none;
+    right:-60px;top:-60px;background:var(--color-accent);opacity:0.15;filter:blur(40px);pointer-events:none;
   }
-  .bld-sum-obj-lbl {font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:14px}
+  .bld-sum-obj-lbl {font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--color-accent);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:14px}
   .bld-sum-obj-h2 {font-size:24px;font-weight:500;letter-spacing:-0.02em;line-height:1.3;color:var(--font-color,#fff)}
   .bld-sum-obj-meta {
     margin-top:auto;padding-top:16px;border-top:1px solid var(--accent-line);
@@ -264,7 +264,7 @@ const BUILDER_CSS = `
     letter-spacing:0.14em;text-transform:uppercase;margin-bottom:6px;
     display:flex;align-items:center;gap:8px;
   }
-  .bld-sum-lbl .d {width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex-shrink:0}
+  .bld-sum-lbl .d {width:6px;height:6px;border-radius:50%;background:var(--color-accent);box-shadow:0 0 6px var(--color-accent);flex-shrink:0}
   .bld-sum-txt {font-size:14px;color:var(--font-color,#fff);line-height:1.45}
   .bld-sum-anchor {border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:14px 18px;background:linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0))}
   .bld-sum-anchor-row {display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px}
@@ -299,7 +299,7 @@ const BUILDER_CSS = `
   .bld-btn:hover:not(:disabled) {color:#fff;border-color:rgba(255,255,255,0.22);background:rgba(255,255,255,0.03)}
   .bld-btn:disabled {opacity:0.3;cursor:not-allowed}
   .bld-btn svg {width:14px;height:14px}
-  .bld-btn.primary {background:var(--accent);color:#0a0a0a;border-color:var(--accent)}
+  .bld-btn.primary {background:var(--color-accent);color:#0a0a0a;border-color:var(--color-accent)}
   .bld-btn.primary:hover:not(:disabled) {
     background:var(--accent-2);border-color:var(--accent-2);
     transform:translateX(2px);box-shadow:0 10px 40px -10px var(--accent-glow);
@@ -307,10 +307,19 @@ const BUILDER_CSS = `
   .bld-btn.primary:disabled {opacity:0.35;cursor:not-allowed;transform:none}
 
   .bld-save-status {display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,0.40);font-family:'JetBrains Mono',monospace;letter-spacing:0.06em}
-  .bld-save-status .sd {width:6px;height:6px;border-radius:50%;background:var(--secondary,#0E6E95);box-shadow:0 0 6px var(--secondary,#0E6E95);flex-shrink:0}
+  .bld-save-status .sd {width:6px;height:6px;border-radius:50%;background:var(--color-secondary,#0E6E95);box-shadow:0 0 6px var(--color-secondary,#0E6E95);flex-shrink:0}
 
   @keyframes bld-spin {to{transform:rotate(360deg)}}
   .bld-spinner {width:12px;height:12px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:bld-spin .7s linear infinite;flex-shrink:0}
+  .bld-back-btn {
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 10px;border-radius:8px;
+    border:1px solid rgba(255,255,255,.12);background:transparent;
+    color:rgba(255,255,255,.45);font-family:inherit;font-size:12px;cursor:pointer;transition:all .2s;
+    flex-shrink:0;
+  }
+  .bld-back-btn:hover {color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.04);}
+  .bld-back-btn svg {width:12px;height:12px;}
 
   /* ── Settings ── */
   .bld-settings-wrap {position:relative;}
@@ -332,8 +341,8 @@ const BUILDER_CSS = `
     border:1px solid rgba(255,255,255,.14);background:transparent;
     color:rgba(255,255,255,.50);cursor:pointer;transition:all .2s;flex-shrink:0;
   }
-  .bld-fab:hover {color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
-  .bld-fab.open {color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+  .bld-fab:hover {color:var(--color-accent);border-color:var(--color-accent);background:var(--accent-soft);}
+  .bld-fab.open {color:var(--color-accent);border-color:var(--color-accent);background:var(--accent-soft);}
   .bld-fab svg {width:15px;height:15px;transition:transform .4s;}
   .bld-fab.open svg {transform:rotate(90deg);}
   .bld-color-row {display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:12px;color:rgba(255,255,255,.6);gap:8px;}
@@ -629,16 +638,20 @@ export default function Builder() {
   const sc = deriveColorVars(validHex(bldSettings.secondaryColor, '#4A90E2'))
 
   const CSSVars = {
-    '--accent':         ac.base, '--accent-2':        ac.hi,
-    '--accent-soft':    ac.soft, '--accent-line':      ac.line, '--accent-glow': ac.glow,
-    '--secondary':      sc.base, '--secondary-soft':   sc.soft,
-    '--secondary-line': sc.line, '--secondary-glow':   sc.glow,
-    '--bg':             validHex(bldSettings.bgColor, '#0a0a0a'),
+    '--color-accent':      ac.base, '--accent-2':      ac.hi,
+    '--accent-soft':       ac.soft, '--accent-line':   ac.line, '--accent-glow': ac.glow,
+    '--color-secondary':   sc.base, '--secondary-soft': sc.soft,
+    '--secondary-line':    sc.line, '--secondary-glow': sc.glow,
+    '--color-background':  validHex(bldSettings.bgColor, '#0a0a0a'),
+  }
+
+  const handleBack = () => {
+    if (window.confirm('Workshop beenden? Alle Eingaben gehen verloren.')) navigate('/')
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="bld-root" style={CSSVars}>
+    <div className="bld-root" style={CSSVars} onClick={() => settingsOpen && setSettingsOpen(false)}>
       <style>{BUILDER_CSS}</style>
       <div className="bld-bg-grid" />
       <div className="bld-bg-glow" />
@@ -649,6 +662,10 @@ export default function Builder() {
           {/* ── Header ── */}
           <header className="bld-head">
             <div className="bld-brand">
+              <button className="bld-back-btn" onClick={handleBack}>
+                <ArrowLIco />Startseite
+              </button>
+              <span style={{ width:1, height:14, background:'rgba(255,255,255,0.14)', flexShrink:0 }} />
               {bldSettings.logoDataUrl
                 ? <img src={bldSettings.logoDataUrl} alt="Logo" className="bld-brand-logo" />
                 : <div className="bld-brand-mark" />
@@ -968,91 +985,6 @@ export default function Builder() {
             </div>
 
             <div className="bld-nav-next">
-              {/* ── Settings ── */}
-              <div className="bld-settings-wrap" onClick={e => e.stopPropagation()}>
-                <div className={`bld-settings-panel ${settingsOpen ? 'open' : ''}`}>
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.16em', color: 'rgba(255,255,255,.38)', textTransform: 'uppercase', marginBottom: 16 }}>
-                    Einstellungen
-                  </div>
-
-                  {/* Unternehmen */}
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
-                    Unternehmen
-                  </div>
-
-                  {/* Logo */}
-                  <div style={{ marginBottom: 10 }}>
-                    <label style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,.5)', marginBottom: 5 }}>Logo (PNG / SVG / JPG)</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {bldSettings.logoDataUrl && (
-                        <img src={bldSettings.logoDataUrl} alt="Logo"
-                          style={{ height: 28, width: 'auto', objectFit: 'contain', borderRadius: 4, background: 'rgba(255,255,255,.06)', padding: '2px 6px', flexShrink: 0 }} />
-                      )}
-                      <button onClick={() => logoInputRef.current?.click()} style={{
-                        flex: 1, padding: '6px 10px', fontSize: 12,
-                        background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.14)',
-                        borderRadius: 6, color: 'rgba(255,255,255,.6)', cursor: 'pointer',
-                      }}>
-                        {bldSettings.logoDataUrl ? 'Ändern' : 'Hochladen'}
-                      </button>
-                      {bldSettings.logoDataUrl && (
-                        <button onClick={() => updateBldSettings({ logoDataUrl: '' })} style={{
-                          padding: '6px 9px', fontSize: 12,
-                          background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.14)',
-                          borderRadius: 6, color: 'rgba(255,255,255,.38)', cursor: 'pointer',
-                        }}>✕</button>
-                      )}
-                      <input ref={logoInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml"
-                        onChange={handleLogoUpload} style={{ display: 'none' }} />
-                    </div>
-                  </div>
-
-                  {/* Name (Fallback wenn kein Logo) */}
-                  <div style={{ marginBottom: 14 }}>
-                    <label style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,.5)', marginBottom: 5 }}>Name (ohne Logo)</label>
-                    <input
-                      type="text"
-                      value={bldSettings.companyName}
-                      placeholder="z.B. Acme GmbH"
-                      onChange={e => updateBldSettings({ companyName: e.target.value })}
-                      style={{
-                        width: '100%', padding: '7px 10px',
-                        background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.14)',
-                        borderRadius: 6, color: '#fff', fontFamily: 'Inter,system-ui,sans-serif',
-                        fontSize: 13, outline: 'none', boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
-
-                  {/* Farben */}
-                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
-                    Farben
-                  </div>
-                  <ColorPicker label="Akzentfarbe" value={bldSettings.accentColor}
-                    onChange={v => updateBldSettings({ accentColor: v })} />
-                  <ColorPicker label="Sekundärfarbe" value={bldSettings.secondaryColor}
-                    onChange={v => updateBldSettings({ secondaryColor: v })} />
-                  <ColorPicker label="Hintergrundfarbe" value={bldSettings.bgColor}
-                    onChange={v => updateBldSettings({ bgColor: v })} />
-
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
-
-                  <button className="bld-settings-reset" onClick={resetBldSettings}>
-                    Auf Standardwerte zurücksetzen
-                  </button>
-                </div>
-
-                <button
-                  className={`bld-fab ${settingsOpen ? 'open' : ''}`}
-                  onClick={() => setSettingsOpen(o => !o)}
-                  title="Einstellungen"
-                >
-                  <GearIco />
-                </button>
-              </div>
-
               {step < 5 ? (
                 <button className="bld-btn primary" onClick={() => setStep(s => s + 1)} disabled={!canProceed()}>
                   {meta.next}
@@ -1065,6 +997,92 @@ export default function Builder() {
           </footer>
 
         </div>
+      </div>
+
+      {/* ── Settings Panel — fixed außerhalb des skalierten Canvas ── */}
+      <div
+        style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999 }}
+        onClick={e => e.stopPropagation()}
+      >
+        {settingsOpen && (
+          <div style={{
+            position: 'absolute', bottom: 'calc(100% + 12px)', right: 0,
+            width: 300, maxHeight: '80vh', overflowY: 'auto',
+            padding: 18, borderRadius: 14,
+            background: 'linear-gradient(180deg,rgba(20,20,20,.98),rgba(12,12,12,.98))',
+            border: '1px solid rgba(255,255,255,.14)',
+            backdropFilter: 'blur(18px)',
+            boxShadow: '0 20px 60px -20px rgba(0,0,0,.8)',
+            fontFamily: 'Inter,system-ui,sans-serif',
+          }}>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.16em', color: 'rgba(255,255,255,.38)', textTransform: 'uppercase', marginBottom: 16 }}>
+              Einstellungen
+            </div>
+
+            {/* Unternehmen */}
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
+              Unternehmen
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <label style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,.5)', marginBottom: 5 }}>Logo (PNG / SVG / JPG)</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {bldSettings.logoDataUrl && (
+                  <img src={bldSettings.logoDataUrl} alt="Logo"
+                    style={{ height: 28, width: 'auto', objectFit: 'contain', borderRadius: 4, background: 'rgba(255,255,255,.06)', padding: '2px 6px', flexShrink: 0 }} />
+                )}
+                <button onClick={() => logoInputRef.current?.click()} style={{
+                  flex: 1, padding: '6px 10px', fontSize: 12,
+                  background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.14)',
+                  borderRadius: 6, color: 'rgba(255,255,255,.6)', cursor: 'pointer',
+                }}>
+                  {bldSettings.logoDataUrl ? 'Ändern' : 'Hochladen'}
+                </button>
+                {bldSettings.logoDataUrl && (
+                  <button onClick={() => updateBldSettings({ logoDataUrl: '' })} style={{
+                    padding: '6px 9px', fontSize: 12,
+                    background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.14)',
+                    borderRadius: 6, color: 'rgba(255,255,255,.38)', cursor: 'pointer',
+                  }}>✕</button>
+                )}
+                <input ref={logoInputRef} type="file" accept="image/png,image/jpeg,image/svg+xml"
+                  onChange={handleLogoUpload} style={{ display: 'none' }} />
+              </div>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,.5)', marginBottom: 5 }}>Name (ohne Logo)</label>
+              <input type="text" value={bldSettings.companyName} placeholder="z.B. Acme GmbH"
+                onChange={e => updateBldSettings({ companyName: e.target.value })}
+                style={{ width: '100%', padding: '7px 10px', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 6, color: '#fff', fontFamily: 'Inter,system-ui,sans-serif', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
+
+            {/* Farben */}
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
+              Farben
+            </div>
+            <ColorPicker label="Akzentfarbe" value={bldSettings.accentColor}
+              onChange={v => updateBldSettings({ accentColor: v })} />
+            <ColorPicker label="Sekundärfarbe" value={bldSettings.secondaryColor}
+              onChange={v => updateBldSettings({ secondaryColor: v })} />
+            <ColorPicker label="Hintergrundfarbe" value={bldSettings.bgColor}
+              onChange={v => updateBldSettings({ bgColor: v })} />
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
+            <button className="bld-settings-reset" onClick={resetBldSettings}>
+              Auf Standardwerte zurücksetzen
+            </button>
+          </div>
+        )}
+
+        <button
+          className={`bld-fab ${settingsOpen ? 'open' : ''}`}
+          onClick={() => setSettingsOpen(o => !o)}
+          title="Einstellungen"
+        >
+          <GearIco />
+        </button>
       </div>
     </div>
   )

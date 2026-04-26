@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 const HOME_CSS = `
   .okr-home {
-    min-height:100vh;background:var(--bg,#0a0a0a);color:#fff;
+    min-height:100vh;background:var(--color-background,#0a0a0a);color:#fff;
     font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
     font-feature-settings:"ss01","cv11";overflow-x:hidden;position:relative;
   }
@@ -38,11 +38,11 @@ const HOME_CSS = `
     display:flex;align-items:center;justify-content:center;
   }
   .okr-home .brand-mark::before {
-    content:"";position:absolute;inset:0;border:1.5px solid var(--secondary,#0E6E95);border-radius:50%;opacity:0.75;
+    content:"";position:absolute;inset:0;border:1.5px solid var(--color-secondary,#0E6E95);border-radius:50%;opacity:0.75;
   }
   .okr-home .brand-mark::after {
-    content:"";width:7px;height:7px;background:var(--accent,#F39200);border-radius:50%;
-    box-shadow:0 0 12px var(--accent,#F39200);
+    content:"";width:7px;height:7px;background:var(--color-accent,#F39200);border-radius:50%;
+    box-shadow:0 0 12px var(--color-accent,#F39200);
   }
   .okr-home .hnav {
     display:flex;align-items:center;gap:32px;font-size:13px;
@@ -60,7 +60,7 @@ const HOME_CSS = `
   }
   .okr-home .pill .dot {
     width:6px;height:6px;border-radius:50%;
-    background:var(--secondary,#0E6E95);box-shadow:0 0 10px var(--secondary,#0E6E95);
+    background:var(--color-secondary,#0E6E95);box-shadow:0 0 10px var(--color-secondary,#0E6E95);
   }
 
   .okr-home main {
@@ -72,19 +72,19 @@ const HOME_CSS = `
   .okr-home .eyebrow {
     display:inline-flex;align-items:center;gap:10px;
     font-family:'JetBrains Mono',monospace;font-size:11px;
-    color:var(--accent,#F39200);letter-spacing:0.18em;text-transform:uppercase;
+    color:var(--color-accent,#F39200);letter-spacing:0.18em;text-transform:uppercase;
     padding:6px 12px;border:1px solid rgba(14,110,149,0.45);border-radius:999px;
     background:rgba(10,84,115,0.22);margin-bottom:28px;
   }
   .okr-home .eyebrow .tick {
-    width:5px;height:5px;background:var(--accent,#F39200);border-radius:50%;box-shadow:0 0 10px var(--accent,#F39200);
+    width:5px;height:5px;background:var(--color-accent,#F39200);border-radius:50%;box-shadow:0 0 10px var(--color-accent,#F39200);
   }
 
   .okr-home h1 {
     font-size:clamp(64px,9vw,128px);line-height:0.92;
     letter-spacing:-0.045em;font-weight:500;margin-bottom:24px;
   }
-  .okr-home h1 .italic { font-style:italic;font-weight:300;color:var(--accent,#F39200); }
+  .okr-home h1 .italic { font-style:italic;font-weight:300;color:var(--color-accent,#F39200); }
   .okr-home h1 .small {
     display:block;font-size:0.42em;font-weight:400;
     color:rgba(255,255,255,0.62);letter-spacing:-0.02em;
@@ -138,7 +138,7 @@ const HOME_CSS = `
     font-family:'JetBrains Mono',monospace;font-size:11px;
     color:rgba(255,255,255,0.38);letter-spacing:0.12em;
   }
-  .okr-home .card:hover .card-num { color:var(--accent,#F39200); }
+  .okr-home .card:hover .card-num { color:var(--color-accent,#F39200); }
   .okr-home .card-arrow {
     width:44px;height:44px;border-radius:50%;
     border:1px solid rgba(255,255,255,0.14);
@@ -146,7 +146,7 @@ const HOME_CSS = `
     transition:all .3s;color:rgba(255,255,255,0.62);flex-shrink:0;
   }
   .okr-home .card:hover .card-arrow {
-    border-color:var(--accent,#F39200);background:var(--accent,#F39200);color:#0a0a0a;transform:rotate(-45deg);
+    border-color:var(--color-accent,#F39200);background:var(--color-accent,#F39200);color:#0a0a0a;transform:rotate(-45deg);
   }
 
   .okr-home .card-visual {
@@ -174,14 +174,14 @@ const HOME_CSS = `
   .okr-home .q .bar i {
     position:absolute;left:0;top:0;height:100%;background:rgba(255,255,255,0.38);border-radius:2px;
   }
-  .okr-home .q.done .bar i { width:100%;background:var(--secondary,#0E6E95); }
+  .okr-home .q.done .bar i { width:100%;background:var(--color-secondary,#0E6E95); }
   .okr-home .q.done {
     color:#fff;border-color:var(--secondary-line,rgba(14,110,149,0.45));background:var(--secondary-bg,rgba(10,84,115,0.22));
   }
-  .okr-home .q.done .idx { color:var(--secondary,#0E6E95); }
+  .okr-home .q.done .idx { color:var(--color-secondary,#0E6E95); }
   .okr-home .q.active { border-color:rgba(255,255,255,0.14);color:#fff; }
   .okr-home .q.active .bar i { width:60%;background:#fff; }
-  .okr-home .card:hover .q.active .bar i { background:var(--accent,#F39200);animation:okr-fill 1.4s ease-out forwards; }
+  .okr-home .card:hover .q.active .bar i { background:var(--color-accent,#F39200);animation:okr-fill 1.4s ease-out forwards; }
   @keyframes okr-fill { from{width:60%} to{width:100%} }
 
   /* Orbit visual */
@@ -194,7 +194,7 @@ const HOME_CSS = `
   .okr-home .orbit-core {
     position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
     width:48px;height:48px;border-radius:50%;
-    background:radial-gradient(circle at 30% 30%,#ffc46a,var(--accent,#F39200) 55%,#7a4a06);
+    background:radial-gradient(circle at 30% 30%,#ffc46a,var(--color-accent,#F39200) 55%,#7a4a06);
     box-shadow:0 0 40px var(--accent-55,rgba(243,146,0,0.55)),inset 0 0 20px rgba(255,255,255,0.2);
   }
   .okr-home .planet {
@@ -202,7 +202,7 @@ const HOME_CSS = `
     background:#fff;top:50%;left:50%;margin:-5px;
     box-shadow:0 0 12px rgba(255,255,255,0.4);
   }
-  .okr-home .planet.gold { background:var(--accent,#F39200);box-shadow:0 0 14px var(--accent,#F39200); }
+  .okr-home .planet.gold { background:var(--color-accent,#F39200);box-shadow:0 0 14px var(--color-accent,#F39200); }
   .okr-home .planet.teal { background:#0E6E95;box-shadow:0 0 14px #0E6E95; }
   .okr-home .planet.dim { background:#A6A6A6;opacity:0.6;box-shadow:none;width:8px;height:8px;margin:-4px; }
   .okr-home .orbit-rot,.okr-home .orbit-rot-rev {
@@ -274,7 +274,7 @@ const HOME_CSS = `
     color:rgba(255,255,255,.50);cursor:pointer;transition:all .2s;flex-shrink:0;
   }
   .okr-home .home-fab:hover,.okr-home .home-fab.open {
-    color:var(--accent,#F39200);border-color:var(--accent,#F39200);
+    color:var(--color-accent,#F39200);border-color:var(--color-accent,#F39200);
     background:var(--accent-08,rgba(243,146,0,.08));
   }
   .okr-home .home-fab svg { width:15px;height:15px;transition:transform .4s; }
@@ -306,18 +306,18 @@ function deriveHomeVars(aHex, sHex, bgHex) {
     return `rgba(${r},${g},${b},${a})`
   }
   return {
-    '--accent':         aHex,
-    '--accent-04':      rgba(aHex,0.04),
-    '--accent-08':      rgba(aHex,0.08),
-    '--accent-20':      rgba(aHex,0.20),
-    '--accent-25':      rgba(aHex,0.25),
-    '--accent-35':      rgba(aHex,0.35),
-    '--accent-45':      rgba(aHex,0.45),
-    '--accent-55':      rgba(aHex,0.55),
-    '--secondary':      sHex,
-    '--secondary-line': rgba(sHex,0.45),
-    '--secondary-bg':   rgba(sHex,0.22),
-    '--bg':             bgHex,
+    '--color-accent':    aHex,
+    '--accent-04':       rgba(aHex,0.04),
+    '--accent-08':       rgba(aHex,0.08),
+    '--accent-20':       rgba(aHex,0.20),
+    '--accent-25':       rgba(aHex,0.25),
+    '--accent-35':       rgba(aHex,0.35),
+    '--accent-45':       rgba(aHex,0.45),
+    '--accent-55':       rgba(aHex,0.55),
+    '--color-secondary': sHex,
+    '--secondary-line':  rgba(sHex,0.45),
+    '--secondary-bg':    rgba(sHex,0.22),
+    '--color-background': bgHex,
   }
 }
 
@@ -438,51 +438,6 @@ export default function Home() {
           <a href="#">Referenzen</a>
           <span className="pill"><span className="dot" />v2.4 · live</span>
         </nav>
-        <div className="home-settings-wrap" onClick={e => e.stopPropagation()}>
-          <div className={`home-settings-panel ${settingsOpen ? 'open' : ''}`}>
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.16em', color: 'rgba(255,255,255,.38)', textTransform: 'uppercase', marginBottom: 16 }}>
-              Einstellungen
-            </div>
-
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
-              Farben
-            </div>
-            <HomeColorPicker label="Akzentfarbe" value={homeSettings.accentColor}
-              onChange={v => updateHomeSetting({ accentColor: v })} />
-            <HomeColorPicker label="Sekundärfarbe" value={homeSettings.secondaryColor}
-              onChange={v => updateHomeSetting({ secondaryColor: v })} />
-            <HomeColorPicker label="Hintergrundfarbe" value={homeSettings.bgColor}
-              onChange={v => updateHomeSetting({ bgColor: v })} />
-
-            <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
-
-            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
-              Unternehmen
-            </div>
-            <div style={{ marginBottom: 4 }}>
-              <label style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,.5)', marginBottom: 5 }}>Name (ersetzt „Lean OKR")</label>
-              <input
-                type="text"
-                className="h-text-input"
-                value={homeSettings.companyName}
-                placeholder="z.B. Acme GmbH"
-                onChange={e => updateHomeSetting({ companyName: e.target.value })}
-              />
-            </div>
-
-            <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
-            <button className="h-reset-btn" onClick={resetHomeSettings}>
-              Auf Standardwerte zurücksetzen
-            </button>
-          </div>
-          <button
-            className={`home-fab ${settingsOpen ? 'open' : ''}`}
-            onClick={() => setSettingsOpen(o => !o)}
-            title="Einstellungen"
-          >
-            <GearIcoHome />
-          </button>
-        </div>
       </header>
 
       {/* Main */}
@@ -594,6 +549,67 @@ export default function Home() {
         <span>© 2026 LEAN OKR · BUILT FOR CONSULTANTS</span>
         <span className="kbd">DRÜCKE <span className="k">1</span> ODER <span className="k">2</span> UM ZU STARTEN</span>
       </footer>
+
+      {/* ── Settings Panel — fixed außerhalb ── */}
+      <div
+        style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999 }}
+        onClick={e => e.stopPropagation()}
+      >
+        {settingsOpen && (
+          <div style={{
+            position: 'absolute', bottom: 'calc(100% + 12px)', right: 0,
+            width: 300, maxHeight: '80vh', overflowY: 'auto',
+            padding: 18, borderRadius: 14,
+            background: 'linear-gradient(180deg,rgba(20,20,20,.98),rgba(12,12,12,.98))',
+            border: '1px solid rgba(255,255,255,.14)',
+            backdropFilter: 'blur(18px)',
+            boxShadow: '0 20px 60px -20px rgba(0,0,0,.8)',
+            fontFamily: 'Inter,system-ui,sans-serif',
+          }}>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.16em', color: 'rgba(255,255,255,.38)', textTransform: 'uppercase', marginBottom: 16 }}>
+              Einstellungen
+            </div>
+
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
+              Farben
+            </div>
+            <HomeColorPicker label="Akzentfarbe" value={homeSettings.accentColor}
+              onChange={v => updateHomeSetting({ accentColor: v })} />
+            <HomeColorPicker label="Sekundärfarbe" value={homeSettings.secondaryColor}
+              onChange={v => updateHomeSetting({ secondaryColor: v })} />
+            <HomeColorPicker label="Hintergrundfarbe" value={homeSettings.bgColor}
+              onChange={v => updateHomeSetting({ bgColor: v })} />
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
+
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
+              Unternehmen
+            </div>
+            <div style={{ marginBottom: 4 }}>
+              <label style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,.5)', marginBottom: 5 }}>Name (ersetzt „Lean OKR")</label>
+              <input
+                type="text"
+                className="h-text-input"
+                value={homeSettings.companyName}
+                placeholder="z.B. Acme GmbH"
+                onChange={e => updateHomeSetting({ companyName: e.target.value })}
+              />
+            </div>
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
+            <button className="h-reset-btn" onClick={resetHomeSettings}>
+              Auf Standardwerte zurücksetzen
+            </button>
+          </div>
+        )}
+        <button
+          className={`home-fab ${settingsOpen ? 'open' : ''}`}
+          onClick={() => setSettingsOpen(o => !o)}
+          title="Einstellungen"
+        >
+          <GearIcoHome />
+        </button>
+      </div>
     </div>
   )
 }
