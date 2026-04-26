@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 const HOME_CSS = `
   .okr-home {
-    min-height:100vh;background:#0a0a0a;color:#fff;
+    min-height:100vh;background:var(--bg,#0a0a0a);color:#fff;
     font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
     font-feature-settings:"ss01","cv11";overflow-x:hidden;position:relative;
   }
@@ -38,7 +38,7 @@ const HOME_CSS = `
     display:flex;align-items:center;justify-content:center;
   }
   .okr-home .brand-mark::before {
-    content:"";position:absolute;inset:0;border:1.5px solid #0E6E95;border-radius:50%;opacity:0.75;
+    content:"";position:absolute;inset:0;border:1.5px solid var(--secondary,#0E6E95);border-radius:50%;opacity:0.75;
   }
   .okr-home .brand-mark::after {
     content:"";width:7px;height:7px;background:var(--accent,#F39200);border-radius:50%;
@@ -60,7 +60,7 @@ const HOME_CSS = `
   }
   .okr-home .pill .dot {
     width:6px;height:6px;border-radius:50%;
-    background:#0E6E95;box-shadow:0 0 10px #0E6E95;
+    background:var(--secondary,#0E6E95);box-shadow:0 0 10px var(--secondary,#0E6E95);
   }
 
   .okr-home main {
@@ -174,11 +174,11 @@ const HOME_CSS = `
   .okr-home .q .bar i {
     position:absolute;left:0;top:0;height:100%;background:rgba(255,255,255,0.38);border-radius:2px;
   }
-  .okr-home .q.done .bar i { width:100%;background:#0E6E95; }
+  .okr-home .q.done .bar i { width:100%;background:var(--secondary,#0E6E95); }
   .okr-home .q.done {
-    color:#fff;border-color:rgba(14,110,149,0.45);background:rgba(10,84,115,0.22);
+    color:#fff;border-color:var(--secondary-line,rgba(14,110,149,0.45));background:var(--secondary-bg,rgba(10,84,115,0.22));
   }
-  .okr-home .q.done .idx { color:#0E6E95; }
+  .okr-home .q.done .idx { color:var(--secondary,#0E6E95); }
   .okr-home .q.active { border-color:rgba(255,255,255,0.14);color:#fff; }
   .okr-home .q.active .bar i { width:60%;background:#fff; }
   .okr-home .card:hover .q.active .bar i { background:var(--accent,#F39200);animation:okr-fill 1.4s ease-out forwards; }
@@ -190,7 +190,7 @@ const HOME_CSS = `
   }
   .okr-home .orbit svg { width:100%;height:100%;overflow:visible; }
   .okr-home .ring { fill:none;stroke:rgba(255,255,255,0.08);stroke-width:1; }
-  .okr-home .ring.active { stroke:rgba(14,110,149,0.45); }
+  .okr-home .ring.active { stroke:var(--secondary-line,rgba(14,110,149,0.45)); }
   .okr-home .orbit-core {
     position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
     width:48px;height:48px;border-radius:50%;
@@ -292,19 +292,32 @@ const HOME_CSS = `
   .okr-home .h-reset-btn:hover { background:rgba(255,255,255,.07);color:rgba(255,255,255,.8); }
 `
 
-const DEFAULT_HOME_SETTINGS = { accentColor: '#F39200', companyName: '' }
+const DEFAULT_HOME_SETTINGS = {
+  accentColor:    '#F5A623',
+  secondaryColor: '#4A90E2',
+  bgColor:        '#0a0a0a',
+  companyName:    '',
+  logoDataUrl:    '',
+}
 
-function deriveHomeVars(hex) {
-  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16)
+function deriveHomeVars(aHex, sHex, bgHex) {
+  const rgba = (h, a) => {
+    const r = parseInt(h.slice(1,3),16), g = parseInt(h.slice(3,5),16), b = parseInt(h.slice(5,7),16)
+    return `rgba(${r},${g},${b},${a})`
+  }
   return {
-    '--accent': hex,
-    '--accent-04': `rgba(${r},${g},${b},0.04)`,
-    '--accent-08': `rgba(${r},${g},${b},0.08)`,
-    '--accent-20': `rgba(${r},${g},${b},0.20)`,
-    '--accent-25': `rgba(${r},${g},${b},0.25)`,
-    '--accent-35': `rgba(${r},${g},${b},0.35)`,
-    '--accent-45': `rgba(${r},${g},${b},0.45)`,
-    '--accent-55': `rgba(${r},${g},${b},0.55)`,
+    '--accent':         aHex,
+    '--accent-04':      rgba(aHex,0.04),
+    '--accent-08':      rgba(aHex,0.08),
+    '--accent-20':      rgba(aHex,0.20),
+    '--accent-25':      rgba(aHex,0.25),
+    '--accent-35':      rgba(aHex,0.35),
+    '--accent-45':      rgba(aHex,0.45),
+    '--accent-55':      rgba(aHex,0.55),
+    '--secondary':      sHex,
+    '--secondary-line': rgba(sHex,0.45),
+    '--secondary-bg':   rgba(sHex,0.22),
+    '--bg':             bgHex,
   }
 }
 
@@ -351,7 +364,7 @@ export default function Home() {
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem('lean-okr-home-settings')
+      const s = localStorage.getItem('lean-okr-builder-settings')
       if (s) setHomeSettings(prev => ({ ...DEFAULT_HOME_SETTINGS, ...JSON.parse(s) }))
     } catch {}
   }, [])
@@ -359,18 +372,22 @@ export default function Home() {
   const updateHomeSetting = (patch) => {
     setHomeSettings(prev => {
       const next = { ...prev, ...patch }
-      localStorage.setItem('lean-okr-home-settings', JSON.stringify(next))
+      localStorage.setItem('lean-okr-builder-settings', JSON.stringify(next))
       return next
     })
   }
 
   const resetHomeSettings = () => {
     setHomeSettings(DEFAULT_HOME_SETTINGS)
-    localStorage.setItem('lean-okr-home-settings', JSON.stringify(DEFAULT_HOME_SETTINGS))
+    localStorage.setItem('lean-okr-builder-settings', JSON.stringify(DEFAULT_HOME_SETTINGS))
   }
 
-  const accentHex = /^#[0-9A-Fa-f]{6}$/.test(homeSettings.accentColor) ? homeSettings.accentColor : '#F39200'
-  const cssVars = deriveHomeVars(accentHex)
+  const validHex = (v, fb) => /^#[0-9A-Fa-f]{6}$/.test(v) ? v : fb
+  const cssVars = deriveHomeVars(
+    validHex(homeSettings.accentColor,    '#F5A623'),
+    validHex(homeSettings.secondaryColor, '#4A90E2'),
+    validHex(homeSettings.bgColor,        '#0a0a0a')
+  )
 
   useEffect(() => {
     const cards = [card1Ref.current, card2Ref.current].filter(Boolean)
@@ -428,10 +445,14 @@ export default function Home() {
             </div>
 
             <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
-              Darstellung
+              Farben
             </div>
             <HomeColorPicker label="Akzentfarbe" value={homeSettings.accentColor}
               onChange={v => updateHomeSetting({ accentColor: v })} />
+            <HomeColorPicker label="Sekundärfarbe" value={homeSettings.secondaryColor}
+              onChange={v => updateHomeSetting({ secondaryColor: v })} />
+            <HomeColorPicker label="Hintergrundfarbe" value={homeSettings.bgColor}
+              onChange={v => updateHomeSetting({ bgColor: v })} />
 
             <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
 

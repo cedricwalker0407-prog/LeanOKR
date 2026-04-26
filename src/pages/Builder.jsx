@@ -6,7 +6,7 @@ import Anthropic from '@anthropic-ai/sdk'
 
 const BUILDER_CSS = `
   .bld-root {
-    min-height:100vh;background:#0a0a0a;color:var(--font-color,#fff);
+    min-height:100vh;background:var(--bg,#0a0a0a);color:#fff;
     font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
     font-feature-settings:"ss01","cv11";
     overflow:hidden;position:relative;
@@ -43,7 +43,7 @@ const BUILDER_CSS = `
   }
   .bld-brand {display:flex;align-items:center;gap:14px;font-weight:600;font-size:15px;letter-spacing:-0.01em}
   .bld-brand-mark {width:20px;height:20px;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .bld-brand-mark::before {content:"";position:absolute;inset:0;border:1.5px solid #0E6E95;border-radius:50%;opacity:0.75}
+  .bld-brand-mark::before {content:"";position:absolute;inset:0;border:1.5px solid var(--secondary,#0E6E95);border-radius:50%;opacity:0.75}
   .bld-brand-mark::after {content:"";width:7px;height:7px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px var(--accent)}
   .bld-brand-logo {height:34px;width:auto;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));flex-shrink:0}
   .bld-brand-product {display:flex;flex-direction:column;line-height:1;gap:3px;padding-left:14px;border-left:1px solid rgba(255,255,255,0.14);}
@@ -59,7 +59,7 @@ const BUILDER_CSS = `
   .bld-plabel b {color:#fff;font-weight:500}
   .bld-dots {display:flex;align-items:center;gap:10px}
   .bld-dot {width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.22);transition:all .3s;position:relative;flex-shrink:0}
-  .bld-dot.done {background:#0E6E95}
+  .bld-dot.done {background:var(--secondary,#0E6E95)}
   .bld-dot.active {
     background:var(--accent);width:10px;height:10px;
     box-shadow:0 0 0 4px var(--accent-soft),0 0 16px var(--accent-glow);
@@ -307,7 +307,7 @@ const BUILDER_CSS = `
   .bld-btn.primary:disabled {opacity:0.35;cursor:not-allowed;transform:none}
 
   .bld-save-status {display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,0.40);font-family:'JetBrains Mono',monospace;letter-spacing:0.06em}
-  .bld-save-status .sd {width:6px;height:6px;border-radius:50%;background:#0E6E95;box-shadow:0 0 6px #0E6E95;flex-shrink:0}
+  .bld-save-status .sd {width:6px;height:6px;border-radius:50%;background:var(--secondary,#0E6E95);box-shadow:0 0 6px var(--secondary,#0E6E95);flex-shrink:0}
 
   @keyframes bld-spin {to{transform:rotate(360deg)}}
   .bld-spinner {width:12px;height:12px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:bld-spin .7s linear infinite;flex-shrink:0}
@@ -367,19 +367,20 @@ const STEP_META = [
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 const DEFAULT_BUILDER_SETTINGS = {
-  accentColor: '#F5A623',
-  fontColor: '#FFFFFF',
-  companyName: '',
-  logoDataUrl: '',
+  accentColor:    '#F5A623',
+  secondaryColor: '#4A90E2',
+  bgColor:        '#0a0a0a',
+  companyName:    '',
+  logoDataUrl:    '',
 }
 
-function deriveAccent(hex) {
+function deriveColorVars(hex) {
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16)
   const lv = (v,f) => Math.min(255, Math.round(v+(255-v)*f))
   const toH = (rv,gv,bv) => '#'+[rv,gv,bv].map(v=>v.toString(16).padStart(2,'0')).join('')
   return {
     base: hex,
-    hi: toH(lv(r,.18),lv(g,.18),lv(b,.18)),
+    hi:   toH(lv(r,.18),lv(g,.18),lv(b,.18)),
     soft: `rgba(${r},${g},${b},0.12)`,
     line: `rgba(${r},${g},${b},0.30)`,
     glow: `rgba(${r},${g},${b},0.45)`,
@@ -623,14 +624,16 @@ export default function Builder() {
   const year = today.getFullYear()
   const meta = STEP_META[step - 1]
 
-  const accentHex = /^#[0-9A-Fa-f]{6}$/.test(bldSettings.accentColor) ? bldSettings.accentColor : '#F5A623'
-  const fontHex   = /^#[0-9A-Fa-f]{6}$/.test(bldSettings.fontColor)   ? bldSettings.fontColor   : '#FFFFFF'
-  const ac = deriveAccent(accentHex)
+  const validHex = (v, fb) => /^#[0-9A-Fa-f]{6}$/.test(v) ? v : fb
+  const ac = deriveColorVars(validHex(bldSettings.accentColor, '#F5A623'))
+  const sc = deriveColorVars(validHex(bldSettings.secondaryColor, '#4A90E2'))
 
   const CSSVars = {
-    '--accent': ac.base, '--accent-2': ac.hi,
-    '--accent-soft': ac.soft, '--accent-line': ac.line, '--accent-glow': ac.glow,
-    '--font-color': fontHex,
+    '--accent':         ac.base, '--accent-2':        ac.hi,
+    '--accent-soft':    ac.soft, '--accent-line':      ac.line, '--accent-glow': ac.glow,
+    '--secondary':      sc.base, '--secondary-soft':   sc.soft,
+    '--secondary-line': sc.line, '--secondary-glow':   sc.glow,
+    '--bg':             validHex(bldSettings.bgColor, '#0a0a0a'),
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -1029,8 +1032,10 @@ export default function Builder() {
                   </div>
                   <ColorPicker label="Akzentfarbe" value={bldSettings.accentColor}
                     onChange={v => updateBldSettings({ accentColor: v })} />
-                  <ColorPicker label="Schriftfarbe" value={bldSettings.fontColor}
-                    onChange={v => updateBldSettings({ fontColor: v })} />
+                  <ColorPicker label="Sekundärfarbe" value={bldSettings.secondaryColor}
+                    onChange={v => updateBldSettings({ secondaryColor: v })} />
+                  <ColorPicker label="Hintergrundfarbe" value={bldSettings.bgColor}
+                    onChange={v => updateBldSettings({ bgColor: v })} />
 
                   <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
 
