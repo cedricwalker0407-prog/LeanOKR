@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const HOME_CSS = `
@@ -41,8 +41,8 @@ const HOME_CSS = `
     content:"";position:absolute;inset:0;border:1.5px solid #0E6E95;border-radius:50%;opacity:0.75;
   }
   .okr-home .brand-mark::after {
-    content:"";width:7px;height:7px;background:#F39200;border-radius:50%;
-    box-shadow:0 0 12px #F39200;
+    content:"";width:7px;height:7px;background:var(--accent,#F39200);border-radius:50%;
+    box-shadow:0 0 12px var(--accent,#F39200);
   }
   .okr-home .hnav {
     display:flex;align-items:center;gap:32px;font-size:13px;
@@ -72,19 +72,19 @@ const HOME_CSS = `
   .okr-home .eyebrow {
     display:inline-flex;align-items:center;gap:10px;
     font-family:'JetBrains Mono',monospace;font-size:11px;
-    color:#F39200;letter-spacing:0.18em;text-transform:uppercase;
+    color:var(--accent,#F39200);letter-spacing:0.18em;text-transform:uppercase;
     padding:6px 12px;border:1px solid rgba(14,110,149,0.45);border-radius:999px;
     background:rgba(10,84,115,0.22);margin-bottom:28px;
   }
   .okr-home .eyebrow .tick {
-    width:5px;height:5px;background:#F39200;border-radius:50%;box-shadow:0 0 10px #F39200;
+    width:5px;height:5px;background:var(--accent,#F39200);border-radius:50%;box-shadow:0 0 10px var(--accent,#F39200);
   }
 
   .okr-home h1 {
     font-size:clamp(64px,9vw,128px);line-height:0.92;
     letter-spacing:-0.045em;font-weight:500;margin-bottom:24px;
   }
-  .okr-home h1 .italic { font-style:italic;font-weight:300;color:#F39200; }
+  .okr-home h1 .italic { font-style:italic;font-weight:300;color:var(--accent,#F39200); }
   .okr-home h1 .small {
     display:block;font-size:0.42em;font-weight:400;
     color:rgba(255,255,255,0.62);letter-spacing:-0.02em;
@@ -115,7 +115,7 @@ const HOME_CSS = `
   }
   .okr-home .card::before {
     content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;
-    background:radial-gradient(400px 200px at var(--mx,50%) var(--my,0%),rgba(243,146,0,0.20),transparent 60%);
+    background:radial-gradient(400px 200px at var(--mx,50%) var(--my,0%),var(--accent-20,rgba(243,146,0,0.20)),transparent 60%);
     opacity:0;transition:opacity .4s;
   }
   .okr-home .card::after {
@@ -124,12 +124,12 @@ const HOME_CSS = `
   }
   .okr-home .card:hover {
     transform:translateY(-4px);
-    background:linear-gradient(180deg,rgba(243,146,0,0.04),rgba(255,255,255,0));
-    box-shadow:0 0 0 1px rgba(243,146,0,0.35),0 30px 80px -30px rgba(243,146,0,0.45),0 0 120px -20px rgba(243,146,0,0.25);
+    background:linear-gradient(180deg,var(--accent-04,rgba(243,146,0,0.04)),rgba(255,255,255,0));
+    box-shadow:0 0 0 1px var(--accent-35,rgba(243,146,0,0.35)),0 30px 80px -30px var(--accent-45,rgba(243,146,0,0.45)),0 0 120px -20px var(--accent-25,rgba(243,146,0,0.25));
     border-color:transparent;
   }
   .okr-home .card:hover::before { opacity:1; }
-  .okr-home .card:hover::after { border-color:rgba(243,146,0,0.35); }
+  .okr-home .card:hover::after { border-color:var(--accent-35,rgba(243,146,0,0.35)); }
 
   .okr-home .card-head {
     display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:40px;
@@ -138,7 +138,7 @@ const HOME_CSS = `
     font-family:'JetBrains Mono',monospace;font-size:11px;
     color:rgba(255,255,255,0.38);letter-spacing:0.12em;
   }
-  .okr-home .card:hover .card-num { color:#F39200; }
+  .okr-home .card:hover .card-num { color:var(--accent,#F39200); }
   .okr-home .card-arrow {
     width:44px;height:44px;border-radius:50%;
     border:1px solid rgba(255,255,255,0.14);
@@ -146,7 +146,7 @@ const HOME_CSS = `
     transition:all .3s;color:rgba(255,255,255,0.62);flex-shrink:0;
   }
   .okr-home .card:hover .card-arrow {
-    border-color:#F39200;background:#F39200;color:#0a0a0a;transform:rotate(-45deg);
+    border-color:var(--accent,#F39200);background:var(--accent,#F39200);color:#0a0a0a;transform:rotate(-45deg);
   }
 
   .okr-home .card-visual {
@@ -181,7 +181,7 @@ const HOME_CSS = `
   .okr-home .q.done .idx { color:#0E6E95; }
   .okr-home .q.active { border-color:rgba(255,255,255,0.14);color:#fff; }
   .okr-home .q.active .bar i { width:60%;background:#fff; }
-  .okr-home .card:hover .q.active .bar i { background:#F39200;animation:okr-fill 1.4s ease-out forwards; }
+  .okr-home .card:hover .q.active .bar i { background:var(--accent,#F39200);animation:okr-fill 1.4s ease-out forwards; }
   @keyframes okr-fill { from{width:60%} to{width:100%} }
 
   /* Orbit visual */
@@ -194,15 +194,15 @@ const HOME_CSS = `
   .okr-home .orbit-core {
     position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
     width:48px;height:48px;border-radius:50%;
-    background:radial-gradient(circle at 30% 30%,#ffc46a,#F39200 55%,#7a4a06);
-    box-shadow:0 0 40px rgba(243,146,0,0.55),inset 0 0 20px rgba(255,255,255,0.2);
+    background:radial-gradient(circle at 30% 30%,#ffc46a,var(--accent,#F39200) 55%,#7a4a06);
+    box-shadow:0 0 40px var(--accent-55,rgba(243,146,0,0.55)),inset 0 0 20px rgba(255,255,255,0.2);
   }
   .okr-home .planet {
     position:absolute;width:10px;height:10px;border-radius:50%;
     background:#fff;top:50%;left:50%;margin:-5px;
     box-shadow:0 0 12px rgba(255,255,255,0.4);
   }
-  .okr-home .planet.gold { background:#F39200;box-shadow:0 0 14px #F39200; }
+  .okr-home .planet.gold { background:var(--accent,#F39200);box-shadow:0 0 14px var(--accent,#F39200); }
   .okr-home .planet.teal { background:#0E6E95;box-shadow:0 0 14px #0E6E95; }
   .okr-home .planet.dim { background:#A6A6A6;opacity:0.6;box-shadow:none;width:8px;height:8px;margin:-4px; }
   .okr-home .orbit-rot,.okr-home .orbit-rot-rev {
@@ -252,12 +252,125 @@ const HOME_CSS = `
     .okr-home .card-visual { margin:0 -28px 24px; }
     .okr-home .sub { margin-bottom:48px; }
   }
+
+  /* ── Settings ── */
+  .okr-home .home-settings-wrap { position:relative; }
+  .okr-home .home-settings-panel {
+    position:absolute;top:calc(100% + 12px);right:0;
+    width:280px;max-height:480px;overflow-y:auto;
+    padding:18px;border-radius:14px;
+    background:linear-gradient(180deg,rgba(20,20,20,.97),rgba(12,12,12,.97));
+    border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(18px);
+    box-shadow:0 20px 60px -20px rgba(0,0,0,.7);
+    opacity:0;transform:translateY(10px) scale(.96);pointer-events:none;
+    transition:all .25s cubic-bezier(.2,.7,.2,1);z-index:100;
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;
+  }
+  .okr-home .home-settings-panel.open { opacity:1;transform:translateY(0) scale(1);pointer-events:auto; }
+  .okr-home .home-fab {
+    display:inline-flex;align-items:center;justify-content:center;
+    width:36px;height:36px;border-radius:10px;
+    border:1px solid rgba(255,255,255,.14);background:transparent;
+    color:rgba(255,255,255,.50);cursor:pointer;transition:all .2s;flex-shrink:0;
+  }
+  .okr-home .home-fab:hover,.okr-home .home-fab.open {
+    color:var(--accent,#F39200);border-color:var(--accent,#F39200);
+    background:var(--accent-08,rgba(243,146,0,.08));
+  }
+  .okr-home .home-fab svg { width:15px;height:15px;transition:transform .4s; }
+  .okr-home .home-fab.open svg { transform:rotate(90deg); }
+  .okr-home .h-color-row { display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:12px;color:rgba(255,255,255,.6);gap:8px; }
+  .okr-home .h-color-label { flex:1;min-width:0; }
+  .okr-home .h-color-controls { display:flex;align-items:center;gap:6px;flex-shrink:0; }
+  .okr-home .h-color-input { width:28px;height:22px;border-radius:5px;border:1px solid rgba(255,255,255,.2);cursor:pointer;padding:0;background:none;overflow:hidden; }
+  .okr-home .h-color-input::-webkit-color-swatch-wrapper { padding:0; }
+  .okr-home .h-color-input::-webkit-color-swatch { border:none;border-radius:3px; }
+  .okr-home .h-hex-input { width:80px;padding:3px 7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:5px;color:rgba(255,255,255,.7);font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;letter-spacing:0.04em; }
+  .okr-home .h-hex-input:focus { border-color:rgba(255,255,255,.3);color:#fff; }
+  .okr-home .h-text-input { width:100%;padding:7px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.14);border-radius:6px;color:#fff;font-family:Inter,system-ui,sans-serif;font-size:13px;outline:none;box-sizing:border-box; }
+  .okr-home .h-reset-btn { width:100%;padding:9px;margin-top:4px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.50);font-family:inherit;font-size:12px;cursor:pointer;transition:all .2s; }
+  .okr-home .h-reset-btn:hover { background:rgba(255,255,255,.07);color:rgba(255,255,255,.8); }
 `
+
+const DEFAULT_HOME_SETTINGS = { accentColor: '#F39200', companyName: '' }
+
+function deriveHomeVars(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16)
+  return {
+    '--accent': hex,
+    '--accent-04': `rgba(${r},${g},${b},0.04)`,
+    '--accent-08': `rgba(${r},${g},${b},0.08)`,
+    '--accent-20': `rgba(${r},${g},${b},0.20)`,
+    '--accent-25': `rgba(${r},${g},${b},0.25)`,
+    '--accent-35': `rgba(${r},${g},${b},0.35)`,
+    '--accent-45': `rgba(${r},${g},${b},0.45)`,
+    '--accent-55': `rgba(${r},${g},${b},0.55)`,
+  }
+}
+
+function HomeColorPicker({ label, value, onChange }) {
+  const [hex, setHex] = useState(value)
+  useEffect(() => { setHex(value) }, [value])
+  function commit(raw) {
+    const v = raw.trim()
+    if (/^#[0-9A-Fa-f]{6}$/.test(v)) onChange(v)
+    else setHex(value)
+  }
+  return (
+    <div className="h-color-row">
+      <span className="h-color-label">{label}</span>
+      <div className="h-color-controls">
+        <input type="color" className="h-color-input" value={value}
+          onChange={e => { onChange(e.target.value); setHex(e.target.value) }} />
+        <input type="text" className="h-hex-input" value={hex}
+          onChange={e => setHex(e.target.value)}
+          onBlur={() => commit(hex)}
+          onKeyDown={e => { if (e.key === 'Enter') { commit(hex); e.target.blur() } }}
+          maxLength={7} />
+      </div>
+    </div>
+  )
+}
+
+function GearIcoHome() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  )
+}
 
 export default function Home() {
   const navigate = useNavigate()
   const card1Ref = useRef(null)
   const card2Ref = useRef(null)
+
+  const [homeSettings, setHomeSettings] = useState(DEFAULT_HOME_SETTINGS)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem('lean-okr-home-settings')
+      if (s) setHomeSettings(prev => ({ ...DEFAULT_HOME_SETTINGS, ...JSON.parse(s) }))
+    } catch {}
+  }, [])
+
+  const updateHomeSetting = (patch) => {
+    setHomeSettings(prev => {
+      const next = { ...prev, ...patch }
+      localStorage.setItem('lean-okr-home-settings', JSON.stringify(next))
+      return next
+    })
+  }
+
+  const resetHomeSettings = () => {
+    setHomeSettings(DEFAULT_HOME_SETTINGS)
+    localStorage.setItem('lean-okr-home-settings', JSON.stringify(DEFAULT_HOME_SETTINGS))
+  }
+
+  const accentHex = /^#[0-9A-Fa-f]{6}$/.test(homeSettings.accentColor) ? homeSettings.accentColor : '#F39200'
+  const cssVars = deriveHomeVars(accentHex)
 
   useEffect(() => {
     const cards = [card1Ref.current, card2Ref.current].filter(Boolean)
@@ -291,7 +404,7 @@ export default function Home() {
   )
 
   return (
-    <div className="okr-home">
+    <div className="okr-home" style={cssVars} onClick={() => setSettingsOpen(false)}>
       <style>{HOME_CSS}</style>
       <div className="bg-grid" />
       <div className="bg-glow" />
@@ -300,7 +413,7 @@ export default function Home() {
       <header className="topbar">
         <div className="brand">
           <div className="brand-mark" />
-          <span>Lean OKR</span>
+          <span>{homeSettings.companyName || 'Lean OKR'}</span>
         </div>
         <nav className="hnav">
           <a href="#">Methode</a>
@@ -308,6 +421,47 @@ export default function Home() {
           <a href="#">Referenzen</a>
           <span className="pill"><span className="dot" />v2.4 · live</span>
         </nav>
+        <div className="home-settings-wrap" onClick={e => e.stopPropagation()}>
+          <div className={`home-settings-panel ${settingsOpen ? 'open' : ''}`}>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.16em', color: 'rgba(255,255,255,.38)', textTransform: 'uppercase', marginBottom: 16 }}>
+              Einstellungen
+            </div>
+
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
+              Darstellung
+            </div>
+            <HomeColorPicker label="Akzentfarbe" value={homeSettings.accentColor}
+              onChange={v => updateHomeSetting({ accentColor: v })} />
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
+
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
+              Unternehmen
+            </div>
+            <div style={{ marginBottom: 4 }}>
+              <label style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,.5)', marginBottom: 5 }}>Name (ersetzt „Lean OKR")</label>
+              <input
+                type="text"
+                className="h-text-input"
+                value={homeSettings.companyName}
+                placeholder="z.B. Acme GmbH"
+                onChange={e => updateHomeSetting({ companyName: e.target.value })}
+              />
+            </div>
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
+            <button className="h-reset-btn" onClick={resetHomeSettings}>
+              Auf Standardwerte zurücksetzen
+            </button>
+          </div>
+          <button
+            className={`home-fab ${settingsOpen ? 'open' : ''}`}
+            onClick={() => setSettingsOpen(o => !o)}
+            title="Einstellungen"
+          >
+            <GearIcoHome />
+          </button>
+        </div>
       </header>
 
       {/* Main */}
