@@ -6,7 +6,7 @@ import Anthropic from '@anthropic-ai/sdk'
 
 const BUILDER_CSS = `
   .bld-root {
-    min-height:100vh;background:#0a0a0a;color:#fff;
+    min-height:100vh;background:#0a0a0a;color:var(--font-color,#fff);
     font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
     font-feature-settings:"ss01","cv11";
     overflow:hidden;position:relative;
@@ -93,7 +93,7 @@ const BUILDER_CSS = `
   }
   .bld-kicker .d {width:5px;height:5px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent);flex-shrink:0}
 
-  .bld-q {font-size:46px;line-height:1.18;letter-spacing:-0.025em;font-weight:500;max-width:24ch;margin-bottom:18px;color:#fff}
+  .bld-q {font-size:46px;line-height:1.18;letter-spacing:-0.025em;font-weight:500;max-width:24ch;margin-bottom:18px;color:var(--font-color,#fff)}
   .bld-q em {color:var(--accent);font-style:normal}
   .bld-q-sm {font-size:36px}
 
@@ -125,7 +125,7 @@ const BUILDER_CSS = `
   .bld-field textarea,.bld-field-input {
     width:100%;padding:18px 22px;
     background:transparent;border:none;outline:none;resize:none;
-    color:#fff;font-family:inherit;font-size:22px;line-height:1.45;letter-spacing:-0.012em;
+    color:var(--font-color,#fff);font-family:inherit;font-size:22px;line-height:1.45;letter-spacing:-0.012em;
   }
   .bld-field textarea {min-height:110px}
   .bld-field textarea::placeholder,.bld-field-input::placeholder {color:rgba(255,255,255,0.22);font-style:italic}
@@ -197,7 +197,7 @@ const BUILDER_CSS = `
   .bld-kr-row.optional .bld-kr-idx .n {color:rgba(255,255,255,0.62)}
   .bld-kr-input {
     flex:1;padding:18px;font-size:18px;background:transparent;border:none;outline:none;
-    color:#fff;font-family:inherit;
+    color:var(--font-color,#fff);font-family:inherit;
   }
   .bld-kr-input::placeholder {color:rgba(255,255,255,0.22);font-style:italic}
   .bld-opt-tag {
@@ -230,7 +230,7 @@ const BUILDER_CSS = `
   .bld-anchor-ico svg {width:11px;height:11px}
   .bld-anchor-input {
     padding:16px 18px;font-size:19px;background:transparent;border:none;outline:none;
-    color:#fff;font-family:inherit;
+    color:var(--font-color,#fff);font-family:inherit;
   }
   .bld-anchor-input::placeholder {color:rgba(255,255,255,0.22);font-style:italic}
   .bld-anchor-hint {padding:0 18px 14px;font-size:11px;color:rgba(255,255,255,0.40);font-family:'JetBrains Mono',monospace;letter-spacing:0.04em}
@@ -247,7 +247,7 @@ const BUILDER_CSS = `
     right:-60px;top:-60px;background:var(--accent);opacity:0.15;filter:blur(40px);pointer-events:none;
   }
   .bld-sum-obj-lbl {font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:14px}
-  .bld-sum-obj-h2 {font-size:24px;font-weight:500;letter-spacing:-0.02em;line-height:1.3;color:#fff}
+  .bld-sum-obj-h2 {font-size:24px;font-weight:500;letter-spacing:-0.02em;line-height:1.3;color:var(--font-color,#fff)}
   .bld-sum-obj-meta {
     margin-top:auto;padding-top:16px;border-top:1px solid var(--accent-line);
     display:flex;gap:20px;flex-wrap:wrap;
@@ -263,11 +263,11 @@ const BUILDER_CSS = `
     display:flex;align-items:center;gap:8px;
   }
   .bld-sum-lbl .d {width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex-shrink:0}
-  .bld-sum-txt {font-size:14px;color:#fff;line-height:1.45}
+  .bld-sum-txt {font-size:14px;color:var(--font-color,#fff);line-height:1.45}
   .bld-sum-anchor {border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:14px 18px;background:linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0))}
   .bld-sum-anchor-row {display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px}
   .bld-sum-anchor-k {font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.40);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:3px}
-  .bld-sum-anchor-v {font-size:13px;color:#fff;font-weight:500}
+  .bld-sum-anchor-v {font-size:13px;color:var(--font-color,#fff);font-weight:500}
 
   .bld-sum-actions {display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)}
   .bld-sum-actions-left {display:flex;gap:10px}
@@ -279,7 +279,7 @@ const BUILDER_CSS = `
     background:rgba(10,10,10,0.7);backdrop-filter:blur(10px);flex-shrink:0;position:relative;z-index:2;
   }
   .bld-nav-back {display:flex;align-items:center}
-  .bld-nav-next {justify-self:end;display:flex;align-items:center}
+  .bld-nav-next {justify-self:end;display:flex;align-items:center;gap:12px;}
   .bld-nav-center {
     justify-self:center;font-size:11px;color:rgba(255,255,255,0.40);
     font-family:'JetBrains Mono',monospace;letter-spacing:0.12em;
@@ -309,6 +309,45 @@ const BUILDER_CSS = `
 
   @keyframes bld-spin {to{transform:rotate(360deg)}}
   .bld-spinner {width:12px;height:12px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:bld-spin .7s linear infinite;flex-shrink:0}
+
+  /* ── Settings ── */
+  .bld-settings-wrap {position:relative;}
+  .bld-settings-panel {
+    position:absolute;bottom:calc(100% + 12px);right:0;
+    width:300px;max-height:min(560px,80vh);overflow-y:auto;
+    padding:18px;border-radius:14px;
+    background:linear-gradient(180deg,rgba(20,20,20,.97),rgba(12,12,12,.97));
+    border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(18px);
+    box-shadow:0 20px 60px -20px rgba(0,0,0,.7);
+    opacity:0;transform:translateY(10px) scale(.96);pointer-events:none;
+    transition:all .25s cubic-bezier(.2,.7,.2,1);
+    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;
+  }
+  .bld-settings-panel.open {opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+  .bld-fab {
+    display:inline-flex;align-items:center;justify-content:center;
+    width:36px;height:36px;border-radius:10px;
+    border:1px solid rgba(255,255,255,.14);background:transparent;
+    color:rgba(255,255,255,.50);cursor:pointer;transition:all .2s;flex-shrink:0;
+  }
+  .bld-fab:hover {color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+  .bld-fab.open {color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+  .bld-fab svg {width:15px;height:15px;transition:transform .4s;}
+  .bld-fab.open svg {transform:rotate(90deg);}
+  .bld-color-row {display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:12px;color:rgba(255,255,255,.6);gap:8px;}
+  .bld-color-row-label {flex:1;min-width:0;}
+  .bld-color-controls {display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .bld-color-input {width:28px;height:22px;border-radius:5px;border:1px solid rgba(255,255,255,.2);cursor:pointer;padding:0;background:none;overflow:hidden;flex-shrink:0;}
+  .bld-color-input::-webkit-color-swatch-wrapper {padding:0;}
+  .bld-color-input::-webkit-color-swatch {border:none;border-radius:3px;}
+  .bld-hex-input {width:80px;padding:3px 7px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:5px;color:rgba(255,255,255,.7);font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;letter-spacing:0.04em;}
+  .bld-hex-input:focus {border-color:rgba(255,255,255,.3);color:#fff;}
+  .bld-settings-reset {
+    width:100%;padding:9px;margin-top:4px;border-radius:8px;
+    background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.14);
+    color:rgba(255,255,255,.50);font-family:inherit;font-size:12px;cursor:pointer;transition:all .2s;
+  }
+  .bld-settings-reset:hover {background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);}
 `
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -322,6 +361,52 @@ const STEP_META = [
   { label: 'ALLTAGSANKER', time: '~ 5 MIN',  next: 'Zur Zusammenfassung' },
   { label: 'REVIEW',       time: 'BEREIT',   next: null },
 ]
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+
+const DEFAULT_BUILDER_SETTINGS = {
+  accentColor: '#F5A623',
+  fontColor: '#FFFFFF',
+  companyName: '',
+}
+
+function deriveAccent(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16)
+  const lv = (v,f) => Math.min(255, Math.round(v+(255-v)*f))
+  const toH = (rv,gv,bv) => '#'+[rv,gv,bv].map(v=>v.toString(16).padStart(2,'0')).join('')
+  return {
+    base: hex,
+    hi: toH(lv(r,.18),lv(g,.18),lv(b,.18)),
+    soft: `rgba(${r},${g},${b},0.12)`,
+    line: `rgba(${r},${g},${b},0.30)`,
+    glow: `rgba(${r},${g},${b},0.45)`,
+  }
+}
+
+function ColorPicker({ label, value, onChange }) {
+  const [hex, setHex] = useState(value)
+  useEffect(() => { setHex(value) }, [value])
+  function commit(raw) {
+    const v = raw.trim()
+    if (/^#[0-9A-Fa-f]{6}$/.test(v)) onChange(v)
+    else setHex(value)
+  }
+  return (
+    <div className="bld-color-row">
+      <span className="bld-color-row-label">{label}</span>
+      <div className="bld-color-controls">
+        <input type="color" className="bld-color-input" value={value}
+          onChange={e => { onChange(e.target.value); setHex(e.target.value) }} />
+        <input type="text" className="bld-hex-input" value={hex}
+          onChange={e => setHex(e.target.value)}
+          onBlur={() => commit(hex)}
+          onKeyDown={e => { if (e.key === 'Enter') { commit(hex); e.target.blur() } }}
+          maxLength={7}
+        />
+      </div>
+    </div>
+  )
+}
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -360,6 +445,12 @@ const MonitorIco = () => (
     <circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/><circle cx="21" cy="6" r="2" fill="currentColor"/>
   </svg>
 )
+const GearIco = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+)
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
@@ -381,6 +472,17 @@ export default function Builder() {
   const [dailyPerson, setDailyPerson] = useState('')
   const [dailyDeadline, setDailyDeadline] = useState('')
   const [copied, setCopied] = useState(false)
+
+  const [bldSettings, setBldSettings] = useState(DEFAULT_BUILDER_SETTINGS)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // ── Load settings from localStorage ──────────────────────────────────────
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem('lean-okr-builder-settings')
+      if (s) setBldSettings(prev => ({ ...DEFAULT_BUILDER_SETTINGS, ...JSON.parse(s) }))
+    } catch {}
+  }, [])
 
   // ── Viewport scaling ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -477,16 +579,33 @@ export default function Builder() {
     setDailyAction(''); setDailyPerson(''); setDailyDeadline(''); setCopied(false)
   }
 
+  const updateBldSettings = (patch) => {
+    setBldSettings(prev => {
+      const next = { ...prev, ...patch }
+      localStorage.setItem('lean-okr-builder-settings', JSON.stringify(next))
+      return next
+    })
+  }
+
+  const resetBldSettings = () => {
+    setBldSettings(DEFAULT_BUILDER_SETTINGS)
+    localStorage.setItem('lean-okr-builder-settings', JSON.stringify(DEFAULT_BUILDER_SETTINGS))
+  }
+
   // ── Computed ──────────────────────────────────────────────────────────────
   const today = new Date()
   const quarter = Math.floor(today.getMonth() / 3) + 1
   const year = today.getFullYear()
   const meta = STEP_META[step - 1]
 
+  const accentHex = /^#[0-9A-Fa-f]{6}$/.test(bldSettings.accentColor) ? bldSettings.accentColor : '#F5A623'
+  const fontHex   = /^#[0-9A-Fa-f]{6}$/.test(bldSettings.fontColor)   ? bldSettings.fontColor   : '#FFFFFF'
+  const ac = deriveAccent(accentHex)
+
   const CSSVars = {
-    '--accent': '#F5A623', '--accent-2': '#FFB840',
-    '--accent-soft': 'rgba(245,166,35,0.12)', '--accent-line': 'rgba(245,166,35,0.30)',
-    '--accent-glow': 'rgba(245,166,35,0.45)',
+    '--accent': ac.base, '--accent-2': ac.hi,
+    '--accent-soft': ac.soft, '--accent-line': ac.line, '--accent-glow': ac.glow,
+    '--font-color': fontHex,
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -503,7 +622,14 @@ export default function Builder() {
           <header className="bld-head">
             <div className="bld-brand">
               <div className="bld-brand-mark" />
-              <span>Lean OKR</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span>Lean OKR</span>
+                {bldSettings.companyName && (
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.40)', fontWeight: 400, letterSpacing: '0.04em' }}>
+                    {bldSettings.companyName}
+                  </span>
+                )}
+              </div>
               <span className="bld-divider" />
               <span className="bld-crumb">OKR-Builder</span>
             </div>
@@ -797,6 +923,60 @@ export default function Builder() {
             </div>
 
             <div className="bld-nav-next">
+              {/* ── Settings ── */}
+              <div className="bld-settings-wrap" onClick={e => e.stopPropagation()}>
+                <div className={`bld-settings-panel ${settingsOpen ? 'open' : ''}`}>
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.16em', color: 'rgba(255,255,255,.38)', textTransform: 'uppercase', marginBottom: 16 }}>
+                    Einstellungen
+                  </div>
+
+                  {/* Unternehmensname */}
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
+                    Unternehmen
+                  </div>
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,.5)', marginBottom: 5 }}>Name</label>
+                    <input
+                      type="text"
+                      value={bldSettings.companyName}
+                      placeholder="z.B. Acme GmbH"
+                      onChange={e => updateBldSettings({ companyName: e.target.value })}
+                      style={{
+                        width: '100%', padding: '7px 10px',
+                        background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.14)',
+                        borderRadius: 6, color: '#fff', fontFamily: 'Inter,system-ui,sans-serif',
+                        fontSize: 13, outline: 'none', boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
+
+                  {/* Farben */}
+                  <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 9, letterSpacing: '0.16em', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', marginBottom: 8 }}>
+                    Farben
+                  </div>
+                  <ColorPicker label="Akzentfarbe" value={bldSettings.accentColor}
+                    onChange={v => updateBldSettings({ accentColor: v })} />
+                  <ColorPicker label="Schriftfarbe" value={bldSettings.fontColor}
+                    onChange={v => updateBldSettings({ fontColor: v })} />
+
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', margin: '12px 0' }} />
+
+                  <button className="bld-settings-reset" onClick={resetBldSettings}>
+                    Auf Standardwerte zurücksetzen
+                  </button>
+                </div>
+
+                <button
+                  className={`bld-fab ${settingsOpen ? 'open' : ''}`}
+                  onClick={() => setSettingsOpen(o => !o)}
+                  title="Einstellungen"
+                >
+                  <GearIco />
+                </button>
+              </div>
+
               {step < 5 ? (
                 <button className="bld-btn primary" onClick={() => setStep(s => s + 1)} disabled={!canProceed()}>
                   {meta.next}
