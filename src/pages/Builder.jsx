@@ -524,12 +524,17 @@ export default function Builder() {
     setAiObjectiveLoading(true); setAiObjectiveError(''); setAiObjective('')
     try {
       const msg = await getClient().messages.create({
-        model: 'claude-sonnet-4-6', max_tokens: 256,
-        messages: [{ role: 'user', content: `Du bist OKR-Experte. Der Nutzer hat folgendes Objective formuliert: "${objective}". Verbessere es zu einem klaren, inspirierenden Objective das einen erreichbaren Zustand beschreibt, keine Aktivität. Gib nur das verbesserte Objective zurück, keine Erklärung.` }],
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'Du bist ein OKR-Experte der Teams im Mittelstand dabei hilft, inspirierende Objectives zu formulieren. Du gibst kurze, direkte Antworten auf Deutsch. Kein Fachjargon, keine langen Erklärungen.',
+        messages: [{
+          role: 'user',
+          content: `Verbessere dieses Objective zu einem klaren, inspirierenden Satz der einen erreichbaren Zustand beschreibt, keine Aktivität:\n\n"${objective}"\n\nGib nur das verbesserte Objective zurück, ohne Anführungszeichen, ohne Erklärung.`,
+        }],
       })
       setAiObjective(msg.content[0].text.trim())
     } catch {
-      setAiObjectiveError('KI-Anfrage fehlgeschlagen.')
+      setAiObjectiveError('KI nicht erreichbar, bitte API Key prüfen.')
     } finally {
       setAiObjectiveLoading(false)
     }
@@ -538,14 +543,22 @@ export default function Builder() {
   const checkKeyResults = async () => {
     setAiKRLoading(true); setAiKRError(''); setAiKRFeedback('')
     try {
-      const krList = keyResults.map((kr, i) => kr.trim() ? `KR${i + 1}: ${kr}` : null).filter(Boolean).join('\n')
+      const krLines = keyResults
+        .map((kr, i) => kr.trim() ? `KR${i + 1}: ${kr.trim()}` : null)
+        .filter(Boolean)
+        .join('\n')
       const msg = await getClient().messages.create({
-        model: 'claude-sonnet-4-6', max_tokens: 512,
-        messages: [{ role: 'user', content: `Du bist OKR-Experte. Prüfe diese Key Results:\n${krList}\n\nSind sie messbar und konkret? Gib für jeden KR entweder 'gut' oder einen konkreten Verbesserungsvorschlag zurück. Antworte als kurze Liste.` }],
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'Du bist ein OKR-Experte der Teams im Mittelstand dabei hilft, messbare Key Results zu formulieren. Du gibst kurzes, direktes Feedback auf Deutsch. Kein Fachjargon, keine langen Erklärungen.',
+        messages: [{
+          role: 'user',
+          content: `Prüfe diese Key Results auf Messbarkeit und Konkretheit:\n${krLines}\n\nAntworte für jedes Key Result mit genau einer Zeile:\n✅ KR1: [kurzes Lob wenn gut] ODER ⚠️ KR1: [ein konkreter Verbesserungsvorschlag]\n\nRegeln für gute Key Results: messbar (hat eine Zahl), beschreibt ein Ergebnis nicht eine Aktivität, hat einen klaren Ausgangswert und Zielwert. Leere Felder ignorieren.`,
+        }],
       })
       setAiKRFeedback(msg.content[0].text.trim())
     } catch {
-      setAiKRError('KI-Anfrage fehlgeschlagen.')
+      setAiKRError('KI nicht erreichbar, bitte API Key prüfen.')
     } finally {
       setAiKRLoading(false)
     }
@@ -787,11 +800,26 @@ export default function Builder() {
                         {aiKRFeedback ? 'KI-Feedback zu euren Key Results' : 'Fehler'}
                       </div>
                       {aiKRFeedback && (
-                        <button className="bld-ai-discard" onClick={() => setAiKRFeedback('')}>Schließen</button>
+                        <button className="bld-ai-discard" onClick={() => { setAiKRFeedback(''); setAiKRError('') }}>Schließen</button>
                       )}
                     </div>
-                    <div className="bld-ai-body" style={{ whiteSpace: 'pre-wrap', fontStyle: 'normal', color: aiKRError ? '#E85D75' : undefined }}>
-                      {aiKRFeedback || aiKRError}
+                    <div className="bld-ai-body" style={{ fontStyle: 'normal' }}>
+                      {aiKRError
+                        ? <span style={{ color: '#E85D75' }}>{aiKRError}</span>
+                        : aiKRFeedback.split('\n').map((line, i) => {
+                            const isGood = line.startsWith('✅')
+                            const isWarn = line.startsWith('⚠️') || line.startsWith('⚠')
+                            return (
+                              <div key={i} style={{
+                                color: isGood ? '#4ADE80' : isWarn ? '#FCD34D' : '#fff',
+                                marginBottom: i < aiKRFeedback.split('\n').length - 1 ? 8 : 0,
+                                lineHeight: 1.55,
+                              }}>
+                                {line}
+                              </div>
+                            )
+                          })
+                      }
                     </div>
                   </div>
                 )}
