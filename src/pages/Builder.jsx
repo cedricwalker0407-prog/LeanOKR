@@ -538,7 +538,7 @@ export default function Builder() {
     setAiObjectiveLoading(true); setAiObjectiveError(''); setAiObjective('')
     try {
       const msg = await getClient().messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1000,
         system: 'Du bist ein OKR-Experte der Teams im Mittelstand dabei hilft, inspirierende Objectives zu formulieren. Du gibst kurze, direkte Antworten auf Deutsch. Kein Fachjargon, keine langen Erklärungen.',
         messages: [{
@@ -547,8 +547,9 @@ export default function Builder() {
         }],
       })
       setAiObjective(msg.content[0].text.trim())
-    } catch {
-      setAiObjectiveError('KI nicht erreichbar, bitte API Key prüfen.')
+    } catch (err) {
+      console.error('improveObjective error:', err)
+      setAiObjectiveError(`KI nicht erreichbar (${err?.status ?? '?'}): ${err?.message ?? String(err)}`)
     } finally {
       setAiObjectiveLoading(false)
     }
@@ -562,7 +563,7 @@ export default function Builder() {
         .filter(Boolean)
         .join('\n')
       const msg = await getClient().messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1000,
         system: 'Du bist ein OKR-Experte der Teams im Mittelstand dabei hilft, messbare Key Results zu formulieren. Du gibst kurzes, direktes Feedback auf Deutsch. Kein Fachjargon, keine langen Erklärungen.',
         messages: [{
@@ -571,8 +572,9 @@ export default function Builder() {
         }],
       })
       setAiKRFeedback(msg.content[0].text.trim())
-    } catch {
-      setAiKRError('KI nicht erreichbar, bitte API Key prüfen.')
+    } catch (err) {
+      console.error('checkKeyResults error:', err)
+      setAiKRError(`KI nicht erreichbar (${err?.status ?? '?'}): ${err?.message ?? String(err)}`)
     } finally {
       setAiKRLoading(false)
     }
